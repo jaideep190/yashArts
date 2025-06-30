@@ -11,6 +11,8 @@ export type ImageType = {
   width: number;
   height: number;
   aiHint?: string;
+  title?: string;
+  description?: string;
 };
 
 interface ArtCollageProps {
