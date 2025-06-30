@@ -1,8 +1,8 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import Image from 'next/image';
 import Gallery from '@/components/gallery';
 import type { ImageType } from '@/components/art-collage';
+import EditableHeader from '@/components/editable-header';
 
 async function getArtworks(): Promise<ImageType[]> {
   const sizeOf = require('image-size');
@@ -32,26 +32,26 @@ async function getArtworks(): Promise<ImageType[]> {
   }
 }
 
+async function getProfilePicture(): Promise<string> {
+  const profilePicPath = path.join(process.cwd(), 'public', 'profile', 'profile.png');
+  try {
+    await fs.stat(profilePicPath);
+    // Add a timestamp to bust server-side cache if any
+    return `/profile/profile.png?t=${Date.now()}`;
+  } catch (error) {
+    // File doesn't exist, return placeholder
+    return 'https://placehold.co/128x128.png';
+  }
+}
+
+
 export default async function Home() {
   const uploadedImages = await getArtworks();
+  const profilePictureSrc = await getProfilePicture();
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
-      <header className="flex w-full flex-col items-center gap-4 pt-12 md:pt-20 text-center px-4">
-        <Image
-          src="https://placehold.co/128x128.png"
-          alt="A stylized portrait of the artist, Amelia Sinclair"
-          width={128}
-          height={128}
-          priority
-          className="rounded-full object-cover border-4 border-card shadow-lg"
-          data-ai-hint="artist portrait"
-        />
-        <h1 className="font-headline text-4xl md:text-6xl tracking-wider">Thakur Yashraj Singh</h1>
-        <p className="font-body text-base md:text-lg max-w-xl text-muted-foreground">
-          An artist exploring the dance between light and shadow, capturing fleeting moments and emotions on canvas with a blend of classical techniques and modern expressionism.
-        </p>
-      </header>
+      <EditableHeader initialProfilePictureSrc={profilePictureSrc} />
       <main className="w-full">
          <Gallery initialImages={uploadedImages} />
       </main>
