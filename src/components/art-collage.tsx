@@ -76,14 +76,9 @@ function SortableImage({ image, onClick }: { image: ImageType; onClick: () => vo
 
 // Draggable Image for the DragOverlay
 function DraggableImagePreview({ image }: { image: ImageType }) {
-  const scale = 0.5; // 50% of original size for easier dragging
   return (
     <div
-      className="rounded-xl shadow-2xl overflow-hidden cursor-grabbing"
-      style={{
-        width: image.width * scale,
-        height: image.height * scale,
-      }}
+      className="rounded-xl shadow-2xl overflow-hidden cursor-grabbing w-64"
     >
       <IKImage
         src={image.src}
