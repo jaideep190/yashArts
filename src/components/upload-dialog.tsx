@@ -6,13 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { storage } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Loader2 } from 'lucide-react';
 import type { ImageType } from '@/components/art-collage';
-
-// In a real production app, this should be stored securely as an environment variable.
-const SECRET_KEY = 'yasharts-secret'; 
+import { uploadArtwork } from '@/app/actions';
 
 interface UploadDialogProps {
   open: boolean;
@@ -40,11 +36,6 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
   }
 
   const handleUpload = async () => {
-    if (secretKey !== SECRET_KEY) {
-      toast({ title: 'Error', description: 'Invalid secret key.', variant: 'destructive' });
-      return;
-    }
-
     if (!file) {
       toast({ title: 'Error', description: 'Please select a file to upload.', variant: 'destructive' });
       return;
@@ -53,7 +44,7 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
     setIsUploading(true);
 
     try {
-      // 1. Get image dimensions
+      // 1. Get image dimensions on the client
       const { width, height } = await new Promise<{width: number, height: number}>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -71,14 +62,21 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
         reader.readAsDataURL(file);
       });
 
-      // 2. Upload to Firebase Storage
-      const storageRef = ref(storage, `artworks/${Date.now()}-${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
+      // 2. Prepare form data for Server Action
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('secretKey', secretKey);
 
-      // 3. Call parent handler
+      // 3. Call server action
+      const result = await uploadArtwork(formData);
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      // 4. Call parent handler with the new image details
       onUploadComplete({
-        src: downloadURL,
+        src: result.downloadURL,
         width,
         height,
         alt: file.name.split('.').slice(0, -1).join('.'), // Use filename as alt text
@@ -88,9 +86,9 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
       toast({ title: 'Success', description: 'Your artwork has been uploaded.' });
       resetState();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload failed:", error);
-      toast({ title: 'Upload Failed', description: 'Something went wrong. Please try again.', variant: 'destructive' });
+      toast({ title: 'Upload Failed', description: error.message || 'Something went wrong. Please try again.', variant: 'destructive' });
       setIsUploading(false);
     }
   };
@@ -122,7 +120,7 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleUpload} disabled={isUploading || !file}>
+          <Button onClick={handleUpload} disabled={isUploading || !file || !secretKey}>
             {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isUploading ? 'Uploading...' : 'Upload'}
           </Button>
