@@ -94,10 +94,17 @@ export async function deleteArtwork(fileId: string) {
   }
 
   try {
-    // First, delete from ImageKit
-    await imagekit.deleteFile(fileId);
+    // Explicitly promisify the ImageKit delete operation to ensure it completes.
+    await new Promise((resolve, reject) => {
+      imagekit.deleteFile(fileId, (error, result) => {
+        if (error) {
+          return reject(error);
+        }
+        resolve(result);
+      });
+    });
 
-    // Then, remove from Firestore
+    // Then, remove the record from Firestore
     await deleteDoc(doc(artworksCollection, fileId));
 
     revalidatePath('/');
@@ -187,7 +194,15 @@ export async function uploadProfilePicture(formData: FormData) {
     // Delete the old profile picture if it exists
     const currentProfileData = await getProfileData();
     if (currentProfileData.profilePictureFileId) {
-      await imagekit.deleteFile(currentProfileData.profilePictureFileId);
+      await new Promise<void>((resolve) => {
+        imagekit.deleteFile(currentProfileData.profilePictureFileId!, (error, result) => {
+          if (error) {
+            // Log the error but don't block the upload of the new picture
+            console.error("Could not delete old profile picture:", error);
+          }
+          resolve(); // Always resolve to continue the process
+        });
+      });
     }
     
     const buffer = Buffer.from(await file.arrayBuffer());
