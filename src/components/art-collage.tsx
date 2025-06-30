@@ -78,7 +78,8 @@ function SortableImage({ image, onClick }: { image: ImageType; onClick: () => vo
 function DraggableImagePreview({ image }: { image: ImageType }) {
   return (
     <div
-      className="rounded-xl shadow-2xl overflow-hidden cursor-grabbing w-64"
+      className="rounded-xl shadow-2xl overflow-hidden cursor-grabbing"
+      style={{ width: '256px' }}
     >
       <IKImage
         src={image.src}
@@ -143,7 +144,7 @@ export default function ArtCollage({ images, onDelete, onOrderChange }: ArtColla
   const galleryContent = (
     <>
       {images.length > 0 ? (
-        <div className="columns-1 gap-4 sm:columns-2 md:columns-3 lg:columns-4">
+        <div className="columns-2 gap-4 md:columns-3 lg:columns-4">
           {images.map((image) => (
              user ? (
               <SortableImage key={image.fileId} image={image} onClick={() => openModal(image)} />
