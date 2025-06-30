@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
+import { IKImage } from 'imagekitio-react';
 import { FileQuestion } from 'lucide-react';
 import ImageModal from './image-modal';
 import { useAuth } from '@/context/auth-context';
@@ -24,6 +24,7 @@ import { CSS } from '@dnd-kit/utilities';
 
 export type ImageType = {
   src: string;
+  fileId: string;
   alt: string;
   width: number;
   height: number;
@@ -40,7 +41,7 @@ function SortableImage({ image, onClick }: { image: ImageType; onClick: () => vo
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: image.src });
+  } = useSortable({ id: image.fileId });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -60,15 +61,14 @@ function SortableImage({ image, onClick }: { image: ImageType; onClick: () => vo
       role="button"
       aria-label={`Drag to reorder, or click to view larger image for ${image.alt}`}
     >
-      <Image
+      <IKImage
         src={image.src}
         alt={image.alt}
         width={image.width}
         height={image.height}
         className="w-full h-auto transition-transform duration-300 ease-in-out group-hover:scale-105"
-        data-ai-hint={image.aiHint}
-        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-        draggable={false}
+        lqip={{ active: true }}
+        loading="lazy"
       />
     </div>
   );
@@ -78,7 +78,7 @@ function SortableImage({ image, onClick }: { image: ImageType; onClick: () => vo
 function DraggableImagePreview({ image }: { image: ImageType }) {
   return (
     <div className="rounded-xl shadow-2xl overflow-hidden" style={{ width: image.width, height: image.height }}>
-        <Image
+        <IKImage
           src={image.src}
           alt={image.alt}
           width={image.width}
@@ -91,7 +91,7 @@ function DraggableImagePreview({ image }: { image: ImageType }) {
 
 interface ArtCollageProps {
   images: ImageType[];
-  onDelete: (src: string) => void;
+  onDelete: (fileId: string) => void;
   onOrderChange: (images: ImageType[]) => void;
 }
 
@@ -119,7 +119,7 @@ export default function ArtCollage({ images, onDelete, onOrderChange }: ArtColla
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    setActiveImage(images.find(img => img.src === active.id) || null);
+    setActiveImage(images.find(img => img.fileId === active.id) || null);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -127,8 +127,8 @@ export default function ArtCollage({ images, onDelete, onOrderChange }: ArtColla
     setActiveImage(null);
 
     if (over && active.id !== over.id) {
-      const oldIndex = images.findIndex((img) => img.src === active.id);
-      const newIndex = images.findIndex((img) => img.src === over.id);
+      const oldIndex = images.findIndex((img) => img.fileId === active.id);
+      const newIndex = images.findIndex((img) => img.fileId === over.id);
 
       if (oldIndex !== -1 && newIndex !== -1) {
         onOrderChange(arrayMove(images, oldIndex, newIndex));
@@ -136,7 +136,7 @@ export default function ArtCollage({ images, onDelete, onOrderChange }: ArtColla
     }
   };
   
-  const imageIds = React.useMemo(() => images.map(im => im.src), [images]);
+  const imageIds = React.useMemo(() => images.map(im => im.fileId), [images]);
 
   const galleryContent = (
     <>
@@ -144,23 +144,23 @@ export default function ArtCollage({ images, onDelete, onOrderChange }: ArtColla
         <div className="columns-1 gap-4 sm:columns-2 md:columns-3 lg:columns-4">
           {images.map((image) => (
              user ? (
-              <SortableImage key={image.src} image={image} onClick={() => openModal(image)} />
+              <SortableImage key={image.fileId} image={image} onClick={() => openModal(image)} />
             ) : (
               <div
-                key={image.src}
+                key={image.fileId}
                 className="group relative mb-4 break-inside-avoid overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl cursor-pointer"
                 onClick={() => openModal(image)}
                 role="button"
                 aria-label={`View larger image for ${image.alt}`}
               >
-                <Image
+                <IKImage
                   src={image.src}
                   alt={image.alt}
                   width={image.width}
                   height={image.height}
                   className="w-full h-auto transition-transform duration-300 ease-in-out group-hover:scale-105"
-                  data-ai-hint={image.aiHint}
-                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  lqip={{ active: true }}
+                  loading="lazy"
                 />
               </div>
             )

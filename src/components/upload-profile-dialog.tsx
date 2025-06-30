@@ -53,6 +53,7 @@ export default function UploadProfileDialog({ open, onOpenChange, onUploadComple
       if (result.success) {
         onUploadComplete({
           src: result.path!,
+          fileId: result.fileId!,
           width: result.width!,
           height: result.height!,
           alt: 'Profile Picture',

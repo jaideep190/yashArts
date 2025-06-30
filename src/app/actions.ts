@@ -1,13 +1,11 @@
 'use server';
 
-import { writeFile, mkdir, unlink, readFile } from 'fs/promises';
+import { writeFile, mkdir, readFile } from 'fs/promises';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import type { ImageType } from '@/components/art-collage';
-
-// Use require for image-size as it's more reliable in Next.js server environments
-const sizeOf = require('image-size');
+import { imagekit } from '@/lib/imagekit';
 
 const artworksDataPath = path.join(process.cwd(), 'src', 'data', 'artworks.json');
 
@@ -16,7 +14,6 @@ async function readArtworksData(): Promise<ImageType[]> {
     const fileContent = await readFile(artworksDataPath, 'utf-8');
     return JSON.parse(fileContent);
   } catch (error) {
-    // If file doesn't exist, it's not an error, just return empty.
     return [];
   }
 }
@@ -29,14 +26,12 @@ async function writeArtworksData(data: ImageType[]) {
 export async function getArtworks(): Promise<ImageType[]> {
   try {
     const artworks = await readArtworksData();
-    // Sort by newest first (assuming newer items are prepended)
     return artworks;
   } catch (error) {
     console.error("Failed to get artworks:", error);
     return [];
   }
 }
-
 
 export async function uploadArtwork(formData: FormData) {
   const file = formData.get('file') as File;
@@ -52,27 +47,27 @@ export async function uploadArtwork(formData: FormData) {
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
     const safeTitle = title.trim().toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
-    const fileExtension = file.name.split('.').pop() || 'png';
-    const filename = `${Date.now()}-${safeTitle}.${fileExtension}`;
-    const uploadDir = path.join(process.cwd(), 'public', 'artworks');
-    await mkdir(uploadDir, { recursive: true });
-    const filePath = path.join(uploadDir, filename);
-    await writeFile(filePath, buffer);
-    
-    const dimensions = sizeOf(filePath);
-    const publicPath = `/artworks/${filename}`;
+    const filename = `${Date.now()}-${safeTitle}`;
+
+    const uploadResponse = await imagekit.upload({
+      file: buffer,
+      fileName: filename,
+      folder: '/artifolio',
+      useUniqueFileName: true,
+    });
 
     const newArtwork: ImageType = {
-        src: publicPath,
-        width: dimensions.width ?? 500,
-        height: dimensions.height ?? 500,
+        src: uploadResponse.url,
+        fileId: uploadResponse.fileId,
+        width: uploadResponse.width ?? 500,
+        height: uploadResponse.height ?? 500,
         alt: title,
         title: title,
         aiHint: 'uploaded art',
     };
 
     const allArtworks = await readArtworksData();
-    allArtworks.unshift(newArtwork); // Add to the beginning of the array
+    allArtworks.unshift(newArtwork);
     await writeArtworksData(allArtworks);
 
     revalidatePath('/');
@@ -83,38 +78,30 @@ export async function uploadArtwork(formData: FormData) {
     };
   } catch (error: any) {
     console.error('Upload failed:', error);
-    return { success: false, error: error.message || 'Failed to save the file.' };
+    return { success: false, error: error.message || 'Failed to upload file to ImageKit.' };
   }
 }
 
-export async function deleteArtwork(src: string) {
-  if (!src || !src.startsWith('/artworks/')) {
-    return { success: false, error: 'Invalid file path.' };
+export async function deleteArtwork(fileId: string) {
+  if (!fileId) {
+    return { success: false, error: 'Invalid file ID.' };
   }
 
   try {
+    // First, delete from ImageKit
+    await imagekit.deleteFile(fileId);
+
+    // Then, remove from our JSON data
     const allArtworks = await readArtworksData();
-    const updatedArtworks = allArtworks.filter(art => art.src !== src);
+    const updatedArtworks = allArtworks.filter(art => art.fileId !== fileId);
     
-    if (allArtworks.length === updatedArtworks.length) {
-        // This case handles if the JSON is out of sync with the file system.
-        // We'll proceed to delete the file anyway.
-        console.warn(`Artwork with src "${src}" not found in JSON data, but attempting file deletion.`);
-    }
-
     await writeArtworksData(updatedArtworks);
-
-    const filePath = path.join(process.cwd(), 'public', src);
-    await unlink(filePath);
 
     revalidatePath('/');
     return { success: true };
   } catch (error: any) {
     console.error('Deletion failed:', error);
-    if (error.code === 'ENOENT') {
-         return { success: false, error: 'File not found. It may have already been deleted.' };
-    }
-    return { success: false, error: 'Failed to delete the file.' };
+    return { success: false, error: error.message || 'Failed to delete the file.' };
   }
 }
 
@@ -134,7 +121,21 @@ export async function updateArtworkOrder(artworks: ImageType[]) {
 }
 
 
-// Profile Data Management (remains the same)
+// Profile Data Management
+
+const profileDataSchema = z.object({
+  name: z.string().min(1, 'Name is required.'),
+  description: z.string().min(1, 'Description is required.'),
+  instagram: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
+  email: z.string().email('Please enter a valid email address.'),
+  profilePictureUrl: z.string().url().nullable(),
+  profilePictureFileId: z.string().nullable(),
+});
+
+export type ProfileData = z.infer<typeof profileDataSchema>;
+
+const profileDataPath = path.join(process.cwd(), 'public', 'profile', 'profile.json');
+
 
 export async function uploadProfilePicture(formData: FormData) {
   const file = formData.get('file') as File;
@@ -143,23 +144,38 @@ export async function uploadProfilePicture(formData: FormData) {
   }
 
   try {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const filename = 'profile.png';
-    const uploadDir = path.join(process.cwd(), 'public', 'profile');
-    await mkdir(uploadDir, { recursive: true });
-    const filePath = path.join(uploadDir, filename);
-    await writeFile(filePath, buffer);
+    // Delete the old profile picture if it exists
+    const currentProfileData = await getProfileData();
+    if (currentProfileData.profilePictureFileId) {
+      await imagekit.deleteFile(currentProfileData.profilePictureFileId);
+    }
     
-    const dimensions = sizeOf(filePath);
-    const publicPath = `/profile/${filename}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+    
+    const uploadResponse = await imagekit.upload({
+      file: buffer,
+      fileName: `profile-${Date.now()}`,
+      folder: '/artifolio/profile',
+      useUniqueFileName: true,
+      isPrivateFile: false,
+    });
+
+    const updatedProfileData: ProfileData = {
+        ...currentProfileData,
+        profilePictureUrl: uploadResponse.url,
+        profilePictureFileId: uploadResponse.fileId,
+    }
+
+    await writeProfileData(updatedProfileData);
 
     revalidatePath('/');
 
     return { 
       success: true, 
-      path: publicPath,
-      width: dimensions.width,
-      height: dimensions.height
+      path: uploadResponse.url,
+      width: uploadResponse.width,
+      height: uploadResponse.height,
+      fileId: uploadResponse.fileId,
     };
   } catch (error: any) {
     console.error('Upload failed:', error);
@@ -167,17 +183,6 @@ export async function uploadProfilePicture(formData: FormData) {
   }
 }
 
-
-const profileDataSchema = z.object({
-  name: z.string().min(1, 'Name is required.'),
-  description: z.string().min(1, 'Description is required.'),
-  instagram: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
-  email: z.string().email('Please enter a valid email address.'),
-});
-
-export type ProfileData = z.infer<typeof profileDataSchema>;
-
-const profileDataPath = path.join(process.cwd(), 'public', 'profile', 'profile.json');
 
 export async function getProfileData(): Promise<ProfileData> {
   try {
@@ -189,10 +194,11 @@ export async function getProfileData(): Promise<ProfileData> {
       description: 'An artist exploring the dance between light and shadow, capturing fleeting moments and emotions on canvas with a blend of classical techniques and modern expressionism.',
       instagram: 'https://www.instagram.com/yash_._100/',
       email: 't.yashraj.singh.710@gmail.com',
+      profilePictureUrl: null,
+      profilePictureFileId: null,
     };
     try {
-      await mkdir(path.dirname(profileDataPath), { recursive: true });
-      await writeFile(profileDataPath, JSON.stringify(defaultData, null, 2));
+      await writeProfileData(defaultData);
       return defaultData;
     } catch (writeError) {
        console.error("Could not write initial profile.json", writeError);
@@ -201,14 +207,23 @@ export async function getProfileData(): Promise<ProfileData> {
   }
 }
 
-export async function updateProfileData(data: ProfileData) {
+async function writeProfileData(data: ProfileData) {
+    await mkdir(path.dirname(profileDataPath), { recursive: true });
+    await writeFile(profileDataPath, JSON.stringify(data, null, 2));
+}
+
+
+export async function updateProfileData(data: Omit<ProfileData, 'profilePictureUrl' | 'profilePictureFileId'>) {
   try {
-    const validation = profileDataSchema.safeParse(data);
+    const currentData = await getProfileData();
+    const newData = { ...currentData, ...data };
+    
+    const validation = profileDataSchema.safeParse(newData);
     if (!validation.success) {
       return { success: false, error: validation.error.flatten().fieldErrors };
     }
 
-    await writeFile(profileDataPath, JSON.stringify(validation.data, null, 2));
+    await writeProfileData(validation.data);
     revalidatePath('/');
     return { success: true };
   } catch (error: any) {

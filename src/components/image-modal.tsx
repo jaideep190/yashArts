@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
+import { IKImage } from 'imagekitio-react';
 import { X, Trash2, Loader2 } from 'lucide-react';
 import type { ImageType } from './art-collage';
 import { useAuth } from '@/context/auth-context';
@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 interface ImageModalProps {
   image: ImageType;
   onClose: () => void;
-  onDelete: (src: string) => void;
+  onDelete: (fileId: string) => void;
 }
 
 export default function ImageModal({ image, onClose, onDelete }: ImageModalProps) {
@@ -56,10 +56,10 @@ export default function ImageModal({ image, onClose, onDelete }: ImageModalProps
     if (!user) return;
     setIsDeleting(true);
     try {
-      const result = await deleteArtwork(image.src);
+      const result = await deleteArtwork(image.fileId);
       if (result.success) {
         toast({ title: 'Success', description: 'Artwork has been deleted.' });
-        onDelete(image.src);
+        onDelete(image.fileId);
         onClose();
       } else {
         toast({ title: 'Deletion Failed', description: result.error, variant: 'destructive' });
@@ -81,20 +81,19 @@ export default function ImageModal({ image, onClose, onDelete }: ImageModalProps
         aria-modal="true"
         aria-labelledby="image-modal-title"
       >
-        <div className="relative max-w-full max-h-full flex flex-col items-center justify-center gap-4">
+        <div className="flex flex-col items-center justify-center gap-4">
             <div className="text-center text-white drop-shadow-lg">
                 <h2 id="image-modal-title" className="font-headline text-3xl md:text-4xl">
                     {image.title || image.alt}
                 </h2>
             </div>
             <div className="relative">
-                <Image
-                src={image.src}
-                alt={image.alt}
-                width={image.width}
-                height={image.height}
-                className="object-contain block rounded-lg shadow-2xl"
-                style={{ maxHeight: '80vh', maxWidth: '90vw' }}
+                <IKImage
+                    src={image.src}
+                    alt={image.alt}
+                    className="object-contain block rounded-lg shadow-2xl"
+                    style={{ maxHeight: '80vh', maxWidth: '90vw' }}
+                    lqip={{ active: true }}
                 />
             </div>
         </div>

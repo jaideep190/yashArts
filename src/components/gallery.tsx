@@ -25,8 +25,8 @@ export default function Gallery({ initialImages }: GalleryProps) {
     setImages(prevImages => [newImage, ...prevImages]);
   };
 
-  const handleDeleteComplete = (src: string) => {
-    setImages(prevImages => prevImages.filter(image => image.src !== src));
+  const handleDeleteComplete = (fileId: string) => {
+    setImages(prevImages => prevImages.filter(image => image.fileId !== fileId));
   };
 
   const handleOrderChange = async (newImages: ImageType[]) => {

@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Image from 'next/image';
+import { IKImage } from 'imagekitio-react';
 import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
 import { Pencil, Instagram, Mail, Edit } from 'lucide-react';
@@ -23,6 +24,7 @@ export default function EditableHeader({ initialProfilePictureSrc, initialProfil
     const { user } = useAuth();
 
     const handleUploadComplete = (newImage: ImageType) => {
+        // Add a timestamp to break cache
         setProfilePic(`${newImage.src}?t=${new Date().getTime()}`);
     };
 
@@ -33,6 +35,8 @@ export default function EditableHeader({ initialProfilePictureSrc, initialProfil
     React.useEffect(() => {
         setProfileData(initialProfileData);
     }, [initialProfileData]);
+
+    const isPlaceholder = profilePic.includes('placehold.co');
 
     return (
         <>
@@ -49,16 +53,28 @@ export default function EditableHeader({ initialProfilePictureSrc, initialProfil
                     </div>
                 )}
                 <div className="relative group">
-                    <Image
-                        src={profilePic}
-                        alt={`Profile picture of ${profileData.name}`}
-                        width={128}
-                        height={128}
-                        priority
-                        key={profilePic}
-                        className="rounded-full object-cover border-4 border-card shadow-lg"
-                        data-ai-hint="artist portrait"
-                    />
+                    {isPlaceholder ? (
+                        <Image
+                            src={profilePic}
+                            alt={`Profile picture of ${profileData.name}`}
+                            width={128}
+                            height={128}
+                            priority
+                            key={profilePic}
+                            className="rounded-full object-cover border-4 border-card shadow-lg"
+                            data-ai-hint="artist portrait"
+                        />
+                    ) : (
+                        <IKImage
+                            src={profilePic}
+                            alt={`Profile picture of ${profileData.name}`}
+                            width={128}
+                            height={128}
+                            key={profilePic}
+                            className="rounded-full object-cover border-4 border-card shadow-lg"
+                            lqip={{ active: true }}
+                        />
+                    )}
                     {user && (
                         <Button
                             variant="outline"

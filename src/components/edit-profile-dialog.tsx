@@ -34,20 +34,32 @@ const profileFormSchema = z.object({
   email: z.string().email('Please enter a valid email address.'),
 });
 
+type ProfileFormValues = z.infer<typeof profileFormSchema>;
+
 export default function EditProfileDialog({ open, onOpenChange, profileData }: EditProfileDialogProps) {
   const [isSaving, setIsSaving] = React.useState(false);
   const { toast } = useToast();
   
-  const form = useForm<z.infer<typeof profileFormSchema>>({
+  const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues: profileData,
+    defaultValues: {
+      name: profileData.name,
+      description: profileData.description,
+      instagram: profileData.instagram || '',
+      email: profileData.email,
+    },
   });
 
   React.useEffect(() => {
-    form.reset(profileData);
+    form.reset({
+      name: profileData.name,
+      description: profileData.description,
+      instagram: profileData.instagram || '',
+      email: profileData.email,
+    });
   }, [profileData, form]);
 
-  const onSubmit = async (values: z.infer<typeof profileFormSchema>) => {
+  const onSubmit = async (values: ProfileFormValues) => {
     setIsSaving(true);
     try {
       const result = await updateProfileData(values);
