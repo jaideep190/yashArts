@@ -40,8 +40,8 @@ export async function uploadArtwork(formData: FormData) {
     const downloadURL = gcsFile.publicUrl();
 
     return { success: true, downloadURL };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error uploading to GCS:', error);
-    return { success: false, error: 'Upload failed. Please try again.' };
+    return { success: false, error: error.message || 'Upload failed. Please try again.' };
   }
 }
