@@ -4,6 +4,13 @@ import Gallery from '@/components/gallery';
 import type { ImageType } from '@/components/art-collage';
 import EditableHeader from '@/components/editable-header';
 
+// Helper function to capitalize a string
+function capitalize(str: string) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+
 async function getArtworks(): Promise<ImageType[]> {
   const sizeOf = require('image-size');
   const artDirectory = path.join(process.cwd(), 'public', 'artworks');
@@ -14,11 +21,15 @@ async function getArtworks(): Promise<ImageType[]> {
       .map(async (name) => {
         const filePath = path.join(artDirectory, name);
         const dimensions = sizeOf(filePath);
+        // Extract title from filename (e.g., '1678886400000-my-masterpiece.jpg' -> 'My masterpiece')
+        const titleFromName = capitalize(
+          name.replace(/^\d+-/, '').split('.').slice(0, -1).join('.').replace(/[-_]/g, ' ')
+        );
         return {
           src: `/artworks/${name}`,
           width: dimensions.width ?? 500,
           height: dimensions.height ?? 500,
-          alt: name.split('.').slice(0, -1).join(' ').replace(/[-_]/g, ' '),
+          alt: titleFromName,
           aiHint: 'uploaded art',
         };
       });

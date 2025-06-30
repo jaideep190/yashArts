@@ -9,13 +9,23 @@ const sizeOf = require('image-size');
 
 export async function uploadArtwork(formData: FormData) {
   const file = formData.get('file') as File;
+  const title = formData.get('title') as string;
+
   if (!file) {
     return { success: false, error: 'No file provided.' };
+  }
+  if (!title || title.trim().length === 0) {
+    return { success: false, error: 'A title is required.' };
   }
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const filename = `${Date.now()}-${file.name.replace(/\s/g, '_')}`;
+
+    // Sanitize title for use in filename
+    const safeTitle = title.trim().toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+    const fileExtension = file.name.split('.').pop() || 'png';
+    const filename = `${Date.now()}-${safeTitle}.${fileExtension}`;
+    
     const uploadDir = path.join(process.cwd(), 'public', 'artworks');
 
     // Ensure the upload directory exists

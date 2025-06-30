@@ -18,6 +18,7 @@ interface UploadDialogProps {
 
 export default function UploadDialog({ open, onOpenChange, onUploadComplete }: UploadDialogProps) {
   const [file, setFile] = React.useState<File | null>(null);
+  const [title, setTitle] = React.useState('');
   const [isUploading, setIsUploading] = React.useState(false);
   const { toast } = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -30,6 +31,7 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
 
   const resetDialog = () => {
     setFile(null);
+    setTitle('');
     setIsUploading(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -41,11 +43,16 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
       toast({ title: 'Error', description: 'Please select a file to upload.', variant: 'destructive' });
       return;
     }
+    if (!title.trim()) {
+      toast({ title: 'Error', description: 'Please enter a title for the artwork.', variant: 'destructive' });
+      return;
+    }
 
     setIsUploading(true);
     
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('title', title);
     
     try {
       const result = await uploadArtwork(formData);
@@ -55,7 +62,7 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
           src: result.path!,
           width: result.width!,
           height: result.height!,
-          alt: file.name.split('.').slice(0, -1).join('.'),
+          alt: title,
           aiHint: 'uploaded art',
         });
         toast({ title: 'Success', description: 'Your artwork has been uploaded.' });
@@ -88,17 +95,28 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
         <DialogHeader>
           <DialogTitle>Upload New Artwork</DialogTitle>
           <DialogDescription>
-            Choose a file to add to your gallery.
+            Choose a file and give it a title to add to your gallery.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
+          <div className="grid w-full max-w-sm items-center gap-1.5">
+            <Label htmlFor="title">Title</Label>
+            <Input 
+              id="title" 
+              type="text" 
+              placeholder="e.g., Sunset Over the Lake"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              disabled={isUploading} 
+            />
+          </div>
           <div className="grid w-full max-w-sm items-center gap-1.5">
             <Label htmlFor="picture">Picture</Label>
             <Input ref={fileInputRef} id="picture" type="file" onChange={handleFileChange} accept="image/*" disabled={isUploading} />
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleUpload} disabled={isUploading || !file}>
+          <Button onClick={handleUpload} disabled={isUploading || !file || !title.trim()}>
             {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isUploading ? 'Uploading...' : 'Upload'}
           </Button>

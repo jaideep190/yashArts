@@ -41,16 +41,20 @@ export default function ImageModal({ image, onClose }: ImageModalProps) {
       aria-modal="true"
       aria-labelledby="image-modal-title"
     >
-      <div className="relative w-auto h-auto max-w-full max-h-full">
-        <h2 id="image-modal-title" className="sr-only">{image.alt}</h2>
-        <Image
-          src={image.src}
-          alt={image.alt}
-          width={image.width}
-          height={image.height}
-          className="object-contain block rounded-lg shadow-2xl"
-          style={{ maxHeight: '90vh', maxWidth: '90vw' }}
-        />
+      <div className="relative w-full h-full flex flex-col items-center justify-center gap-4">
+        <h2 id="image-modal-title" className="font-headline text-3xl md:text-4xl text-white text-center drop-shadow-lg">
+          {image.alt}
+        </h2>
+        <div className="relative">
+          <Image
+            src={image.src}
+            alt={image.alt}
+            width={image.width}
+            height={image.height}
+            className="object-contain block rounded-lg shadow-2xl"
+            style={{ maxHeight: '80vh', maxWidth: '90vw' }}
+          />
+        </div>
       </div>
       <button
         onClick={onClose}
