@@ -7,7 +7,29 @@ import ParticleBackground from '@/components/particle-background';
 
 export const metadata: Metadata = {
   title: 'YashArts',
-  description: 'An elegant portfolio for artists.',
+  description: 'An elegant portfolio for artists, showcasing a blend of classical techniques and modern expressionism.',
+  openGraph: {
+    title: 'YashArts',
+    description: 'An elegant portfolio for artists, showcasing a blend of classical techniques and modern expressionism.',
+    url: 'https://yasharts-portfolio.vercel.app',
+    siteName: 'YashArts',
+    images: [
+      {
+        url: 'https://placehold.co/1200x630.png',
+        width: 1200,
+        height: 630,
+        alt: 'A preview of the YashArts portfolio website.',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'YashArts',
+    description: 'An elegant portfolio for artists, showcasing a blend of classical techniques and modern expressionism.',
+    images: ['https://placehold.co/1200x630.png'],
+  },
 };
 
 export default function RootLayout({
