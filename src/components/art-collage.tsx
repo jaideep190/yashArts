@@ -76,17 +76,24 @@ function SortableImage({ image, onClick }: { image: ImageType; onClick: () => vo
 
 // Draggable Image for the DragOverlay
 function DraggableImagePreview({ image }: { image: ImageType }) {
+  const scale = 0.5; // 50% of original size for easier dragging
   return (
-    <div className="rounded-xl shadow-2xl overflow-hidden" style={{ width: image.width, height: image.height }}>
-        <IKImage
-          src={image.src}
-          alt={image.alt}
-          width={image.width}
-          height={image.height}
-          className="w-full h-auto"
-        />
+    <div
+      className="rounded-xl shadow-2xl overflow-hidden cursor-grabbing"
+      style={{
+        width: image.width * scale,
+        height: image.height * scale,
+      }}
+    >
+      <IKImage
+        src={image.src}
+        alt={image.alt}
+        width={image.width}
+        height={image.height}
+        className="w-full h-auto"
+      />
     </div>
-  )
+  );
 }
 
 interface ArtCollageProps {
