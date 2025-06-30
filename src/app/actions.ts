@@ -1,6 +1,6 @@
 'use server';
 
-import { writeFile, mkdir } from 'fs/promises';
+import { writeFile, mkdir, unlink } from 'fs/promises';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
 
@@ -93,5 +93,25 @@ export async function uploadProfilePicture(formData: FormData) {
     console.error('Upload failed:', error);
     // Return the actual error message for better debugging
     return { success: false, error: error.message || 'Failed to save the file.' };
+  }
+}
+
+export async function deleteArtwork(src: string) {
+  if (!src || !src.startsWith('/artworks/')) {
+    return { success: false, error: 'Invalid file path.' };
+  }
+
+  try {
+    const filePath = path.join(process.cwd(), 'public', src);
+    await unlink(filePath);
+    revalidatePath('/');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Deletion failed:', error);
+    // Specifically check for file not found error to give a better message
+    if (error.code === 'ENOENT') {
+         return { success: false, error: 'File not found. It may have already been deleted.' };
+    }
+    return { success: false, error: 'Failed to delete the file.' };
   }
 }

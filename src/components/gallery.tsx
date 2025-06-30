@@ -22,9 +22,13 @@ export default function Gallery({ initialImages }: GalleryProps) {
     setImages(prevImages => [newImage, ...prevImages]);
   };
 
+  const handleDeleteComplete = (src: string) => {
+    setImages(prevImages => prevImages.filter(image => image.src !== src));
+  };
+
   return (
     <>
-      <ArtCollage images={images} />
+      <ArtCollage images={images} onDelete={handleDeleteComplete} />
 
       <div className="fixed bottom-8 right-8 flex flex-col gap-4">
         {user ? (

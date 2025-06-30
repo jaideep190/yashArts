@@ -15,9 +15,10 @@ export type ImageType = {
 
 interface ArtCollageProps {
   images: ImageType[];
+  onDelete: (src: string) => void;
 }
 
-export default function ArtCollage({ images }: ArtCollageProps) {
+export default function ArtCollage({ images, onDelete }: ArtCollageProps) {
   const [selectedImage, setSelectedImage] = React.useState<ImageType | null>(null);
 
   const openModal = (image: ImageType) => {
@@ -61,7 +62,7 @@ export default function ArtCollage({ images }: ArtCollageProps) {
           </div>
         )}
       </div>
-      {selectedImage && <ImageModal image={selectedImage} onClose={closeModal} />}
+      {selectedImage && <ImageModal image={selectedImage} onClose={closeModal} onDelete={onDelete} />}
     </>
   );
 }
