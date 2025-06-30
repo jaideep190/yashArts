@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
 
 type ImageType = {
   src: string;
@@ -15,22 +14,19 @@ interface ArtCollageProps {
 
 export default function ArtCollage({ images }: ArtCollageProps) {
   return (
-    <div className="w-full max-w-full overflow-x-auto horizontal-scrollbar mt-8 pb-8">
-      <div className="flex items-start gap-6 md:gap-10 px-6 md:px-10 py-4">
+    <div className="container mx-auto px-4 py-8">
+      <div className="columns-2 sm:columns-3 md:columns-4 gap-4">
         {images.map((image, index) => (
           <div
             key={index}
-            className="group relative shrink-0 transition-all duration-300 ease-in-out hover:scale-105 hover:z-10"
-            style={{
-              height: '55vh',
-            }}
+            className="group relative mb-4 break-inside-avoid overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl"
           >
             <Image
               src={image.src}
               alt={image.alt}
               width={image.width}
               height={image.height}
-              className="h-full w-auto rounded-xl bg-muted object-cover shadow-xl"
+              className="h-auto w-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
               data-ai-hint={image.aiHint}
             />
           </div>
