@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import * as React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,14 +19,24 @@ interface UploadDialogProps {
 const SECRET_KEY = 'yasharts-secret';
 
 export default function UploadDialog({ open, onOpenChange, onUploadComplete }: UploadDialogProps) {
-  const [secretKey, setSecretKey] = useState('');
-  const [file, setFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [secretKey, setSecretKey] = React.useState('');
+  const [file, setFile] = React.useState<File | null>(null);
+  const [isUploading, setIsUploading] = React.useState(false);
   const { toast } = useToast();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+    }
+  };
+
+  const resetDialog = () => {
+    setSecretKey('');
+    setFile(null);
+    setIsUploading(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -42,44 +52,39 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
     }
 
     setIsUploading(true);
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const result = await uploadArtwork(formData);
 
-    try {
-      // Create FormData and call the server action
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const result = await uploadArtwork(formData);
+    setIsUploading(false);
 
-      if (!result.success || !result.path || !result.width || !result.height) {
-        throw new Error(result.error || 'Upload failed. The server did not return all required information.');
-      }
-
-      // Call parent handler with the new image details from the server
+    if (result.success) {
       onUploadComplete({
-        src: result.path,
-        width: result.width,
-        height: result.height,
+        src: result.path!,
+        width: result.width!,
+        height: result.height!,
         alt: file.name.split('.').slice(0, -1).join('.'),
         aiHint: 'uploaded art',
       });
-
       toast({ title: 'Success', description: 'Your artwork has been uploaded.' });
-      
-      // Reset state and close dialog
-      setSecretKey('');
-      setFile(null);
-      setIsUploading(false);
-      onOpenChange(false);
-
-    } catch (error: any) {
-      console.error("Upload failed:", error);
-      toast({ title: 'Upload Failed', description: error.message || 'Something went wrong. Please try again.', variant: 'destructive' });
-      setIsUploading(false);
+      onOpenChange(false); // Close the dialog on success
+    } else {
+      toast({ title: 'Upload Failed', description: result.error, variant: 'destructive' });
     }
+  };
+  
+  // This function ensures the dialog state is reset whenever it's closed.
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      resetDialog();
+    }
+    onOpenChange(isOpen);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Upload New Artwork</DialogTitle>
@@ -101,7 +106,7 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
           </div>
           <div className="grid w-full max-w-sm items-center gap-1.5">
             <Label htmlFor="picture">Picture</Label>
-            <Input id="picture" type="file" onChange={handleFileChange} accept="image/*" disabled={isUploading} />
+            <Input ref={fileInputRef} id="picture" type="file" onChange={handleFileChange} accept="image/*" disabled={isUploading} />
           </div>
         </div>
         <DialogFooter>
