@@ -5,11 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Wand2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import type { ImageType } from '@/components/art-collage';
-import { uploadArtwork, generateArtworkDescription } from '@/app/actions';
+import { uploadArtwork } from '@/app/actions';
 
 interface UploadDialogProps {
   open: boolean;
@@ -20,9 +19,7 @@ interface UploadDialogProps {
 export default function UploadDialog({ open, onOpenChange, onUploadComplete }: UploadDialogProps) {
   const [file, setFile] = React.useState<File | null>(null);
   const [title, setTitle] = React.useState('');
-  const [description, setDescription] = React.useState('');
   const [isUploading, setIsUploading] = React.useState(false);
-  const [isGenerating, setIsGenerating] = React.useState(false);
   const { toast } = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -35,38 +32,9 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
   const resetDialog = () => {
     setFile(null);
     setTitle('');
-    setDescription('');
     setIsUploading(false);
-    setIsGenerating(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
-    }
-  };
-
-  const handleGenerateDescription = async () => {
-    if (!file) return;
-    setIsGenerating(true);
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = async () => {
-        const base64data = reader.result as string;
-        const result = await generateArtworkDescription({ photoDataUri: base64data });
-        if (result.success && result.description) {
-          setDescription(result.description);
-           toast({ title: 'Success', description: 'AI description has been generated.' });
-        } else {
-          toast({ title: 'Generation Failed', description: result.error, variant: 'destructive' });
-        }
-        setIsGenerating(false);
-      };
-      reader.onerror = () => {
-        toast({ title: 'Error', description: 'Could not read the file.', variant: 'destructive' });
-        setIsGenerating(false);
-      }
-    } catch (error) {
-      toast({ title: 'Error', description: 'An unexpected error occurred.', variant: 'destructive' });
-      setIsGenerating(false);
     }
   };
 
@@ -85,7 +53,6 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
     const formData = new FormData();
     formData.append('file', file);
     formData.append('title', title);
-    formData.append('description', description);
     
     try {
       const result = await uploadArtwork(formData);
@@ -122,7 +89,7 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
         <DialogHeader>
           <DialogTitle>Upload New Artwork</DialogTitle>
           <DialogDescription>
-            Choose a file, give it a title, and add a description for your gallery.
+            Choose a file and give it a title for your gallery.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -141,30 +108,6 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
               disabled={isUploading} 
             />
           </div>
-          <div className="grid w-full items-center gap-1.5">
-             <Label htmlFor="description">Description</Label>
-              <div className="relative">
-                <Textarea
-                  id="description"
-                  placeholder="A brief, artistic description of your work..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  disabled={isUploading || isGenerating}
-                  className="pr-24"
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  className="absolute bottom-2 right-2"
-                  onClick={handleGenerateDescription}
-                  disabled={!file || isGenerating || isUploading}
-                >
-                  {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                  Generate
-                </Button>
-              </div>
-           </div>
         </div>
         <DialogFooter>
           <Button onClick={handleUpload} disabled={isUploading || !file || !title.trim()}>

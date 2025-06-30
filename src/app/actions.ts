@@ -5,7 +5,6 @@ import path from 'path';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import type { ImageType } from '@/components/art-collage';
-import { describeArtwork } from '@/ai/flows/describe-artwork-flow';
 
 // Use require for image-size as it's more reliable in Next.js server environments
 const sizeOf = require('image-size');
@@ -42,7 +41,6 @@ export async function getArtworks(): Promise<ImageType[]> {
 export async function uploadArtwork(formData: FormData) {
   const file = formData.get('file') as File;
   const title = formData.get('title') as string;
-  const description = formData.get('description') as string;
 
   if (!file) {
     return { success: false, error: 'No file provided.' };
@@ -70,7 +68,6 @@ export async function uploadArtwork(formData: FormData) {
         height: dimensions.height ?? 500,
         alt: title,
         title: title,
-        description: description,
         aiHint: 'uploaded art',
     };
 
@@ -119,17 +116,6 @@ export async function deleteArtwork(src: string) {
     }
     return { success: false, error: 'Failed to delete the file.' };
   }
-}
-
-
-export async function generateArtworkDescription(input: { photoDataUri: string }) {
-    try {
-        const result = await describeArtwork(input);
-        return { success: true, description: result.description };
-    } catch (error: any) {
-        console.error('AI description generation failed:', error);
-        return { success: false, error: 'Failed to generate description from AI.' };
-    }
 }
 
 
