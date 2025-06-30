@@ -8,6 +8,8 @@ import UploadDialog from '@/components/upload-dialog';
 import { Button } from '@/components/ui/button';
 import { FilePlus2, LogIn, LogOut } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
+import { updateArtworkOrder } from '@/app/actions';
+import { useToast } from '@/hooks/use-toast';
 
 interface GalleryProps {
   initialImages: ImageType[];
@@ -17,6 +19,7 @@ export default function Gallery({ initialImages }: GalleryProps) {
   const [images, setImages] = useState<ImageType[]>(initialImages);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const { user, logout } = useAuth();
+  const { toast } = useToast();
 
   const handleUploadComplete = (newImage: ImageType) => {
     setImages(prevImages => [newImage, ...prevImages]);
@@ -26,9 +29,30 @@ export default function Gallery({ initialImages }: GalleryProps) {
     setImages(prevImages => prevImages.filter(image => image.src !== src));
   };
 
+  const handleOrderChange = async (newImages: ImageType[]) => {
+    // Optimistically update the UI
+    setImages(newImages);
+
+    // Persist the changes to the server
+    const result = await updateArtworkOrder(newImages);
+    if (!result.success) {
+      toast({
+        title: 'Error Saving Order',
+        description: result.error,
+        variant: 'destructive',
+      });
+      // Revert to the original order if save fails
+      setImages(images); 
+    }
+  };
+
   return (
     <>
-      <ArtCollage images={images} onDelete={handleDeleteComplete} />
+      <ArtCollage 
+        images={images} 
+        onDelete={handleDeleteComplete} 
+        onOrderChange={handleOrderChange}
+      />
 
       <div className="fixed bottom-8 right-8 flex flex-col gap-4">
         {user ? (

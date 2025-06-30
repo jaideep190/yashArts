@@ -118,6 +118,21 @@ export async function deleteArtwork(src: string) {
   }
 }
 
+export async function updateArtworkOrder(artworks: ImageType[]) {
+  if (!Array.isArray(artworks)) {
+    return { success: false, error: 'Invalid data format.' };
+  }
+  
+  try {
+    await writeArtworksData(artworks);
+    revalidatePath('/');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to update artwork order:', error);
+    return { success: false, error: 'An unexpected server error occurred.' };
+  }
+}
+
 
 // Profile Data Management (remains the same)
 
