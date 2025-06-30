@@ -17,11 +17,11 @@ export default function ArtCollage({ images }: ArtCollageProps) {
   return (
     <div className="container mx-auto px-4 py-8">
       {images.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="columns-1 gap-4 sm:columns-2 md:columns-3 lg:columns-4">
           {images.map((image, index) => (
             <div
               key={image.src + index}
-              className="group relative overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl"
+              className="group relative mb-4 break-inside-avoid overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl"
             >
               <Image
                 src={image.src}
