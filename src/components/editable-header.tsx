@@ -4,40 +4,58 @@ import * as React from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
-import { Pencil, Instagram, Mail } from 'lucide-react';
+import { Pencil, Instagram, Mail, Edit } from 'lucide-react';
 import UploadProfileDialog from './upload-profile-dialog';
+import EditProfileDialog from './edit-profile-dialog';
 import type { ImageType } from './art-collage';
+import type { ProfileData } from '@/app/actions';
 
 interface EditableHeaderProps {
     initialProfilePictureSrc: string;
+    initialProfileData: ProfileData;
 }
 
-export default function EditableHeader({ initialProfilePictureSrc }: EditableHeaderProps) {
+export default function EditableHeader({ initialProfilePictureSrc, initialProfileData }: EditableHeaderProps) {
     const [profilePic, setProfilePic] = React.useState(initialProfilePictureSrc);
+    const [profileData, setProfileData] = React.useState(initialProfileData);
     const [isUploadDialogOpen, setIsUploadDialogOpen] = React.useState(false);
+    const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
     const { user } = useAuth();
 
     const handleUploadComplete = (newImage: ImageType) => {
-        // Add a timestamp to the new image src to bust the browser cache
         setProfilePic(`${newImage.src}?t=${new Date().getTime()}`);
     };
 
-    // This effect ensures that if the server-provided prop changes (e.g., on revalidation), the state updates.
     React.useEffect(() => {
         setProfilePic(initialProfilePictureSrc);
     }, [initialProfilePictureSrc]);
 
+    React.useEffect(() => {
+        setProfileData(initialProfileData);
+    }, [initialProfileData]);
+
     return (
         <>
-            <header className="flex w-full flex-col items-center gap-4 pt-12 md:pt-20 text-center px-4">
+            <header className="relative w-full flex flex-col items-center gap-4 pt-12 md:pt-20 text-center px-4">
+                 {user && (
+                    <div className="absolute top-4 right-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsEditDialogOpen(true)}
+                        >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Profile
+                        </Button>
+                    </div>
+                )}
                 <div className="relative group">
                     <Image
                         src={profilePic}
-                        alt="Profile picture of Thakur Yashraj Singh"
+                        alt={`Profile picture of ${profileData.name}`}
                         width={128}
                         height={128}
                         priority
-                        key={profilePic} // Use a key to force re-render when src changes
+                        key={profilePic}
                         className="rounded-full object-cover border-4 border-card shadow-lg"
                         data-ai-hint="artist portrait"
                     />
@@ -54,33 +72,44 @@ export default function EditableHeader({ initialProfilePictureSrc }: EditableHea
                     )}
                 </div>
 
-                <h1 className="font-headline text-4xl md:text-6xl tracking-wider">Thakur Yashraj Singh</h1>
+                <h1 className="font-headline text-4xl md:text-6xl tracking-wider">{profileData.name}</h1>
                 <p className="font-body text-base md:text-lg max-w-xl text-muted-foreground">
-                    An artist exploring the dance between light and shadow, capturing fleeting moments and emotions on canvas with a blend of classical techniques and modern expressionism.
+                    {profileData.description}
                 </p>
 
                 <div className="flex items-center justify-center gap-4 pt-2">
-                    <Button asChild variant="outline" className="rounded-full px-4 transition-all hover:shadow-md hover:-translate-y-1">
-                        <a href="https://www.instagram.com/yash_._100/" target="_blank" rel="noopener noreferrer" aria-label="Instagram profile">
-                            <Instagram />
-                            <span>Instagram</span>
-                        </a>
-                    </Button>
-                    <Button asChild variant="outline" className="rounded-full px-4 transition-all hover:shadow-md hover:-translate-y-1">
-                        <a href="mailto:t.yashraj.singh.710@gmail.com" aria-label="Send an email">
-                            <Mail />
-                            <span>Email</span>
-                        </a>
-                    </Button>
+                    {profileData.instagram && (
+                        <Button asChild variant="outline" className="rounded-full px-4 transition-all hover:shadow-md hover:-translate-y-1">
+                            <a href={profileData.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram profile">
+                                <Instagram />
+                                <span>Instagram</span>
+                            </a>
+                        </Button>
+                    )}
+                    {profileData.email && (
+                         <Button asChild variant="outline" className="rounded-full px-4 transition-all hover:shadow-md hover:-translate-y-1">
+                            <a href={`mailto:${profileData.email}`} aria-label="Send an email">
+                                <Mail />
+                                <span>Email</span>
+                            </a>
+                        </Button>
+                    )}
                 </div>
             </header>
 
             {user && (
-                <UploadProfileDialog
-                    open={isUploadDialogOpen}
-                    onOpenChange={setIsUploadDialogOpen}
-                    onUploadComplete={handleUploadComplete}
-                />
+                <>
+                    <UploadProfileDialog
+                        open={isUploadDialogOpen}
+                        onOpenChange={setIsUploadDialogOpen}
+                        onUploadComplete={handleUploadComplete}
+                    />
+                     <EditProfileDialog
+                        open={isEditDialogOpen}
+                        onOpenChange={setIsEditDialogOpen}
+                        profileData={profileData}
+                    />
+                </>
             )}
         </>
     );

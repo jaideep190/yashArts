@@ -1,8 +1,9 @@
 'use server';
 
-import { writeFile, mkdir, unlink } from 'fs/promises';
+import { writeFile, mkdir, unlink, readFile } from 'fs/promises';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
 
 // Use require for image-size as it's more reliable in Next.js server environments
 const sizeOf = require('image-size');
@@ -113,5 +114,56 @@ export async function deleteArtwork(src: string) {
          return { success: false, error: 'File not found. It may have already been deleted.' };
     }
     return { success: false, error: 'Failed to delete the file.' };
+  }
+}
+
+
+const profileDataSchema = z.object({
+  name: z.string().min(1, 'Name is required.'),
+  description: z.string().min(1, 'Description is required.'),
+  instagram: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
+  email: z.string().email('Please enter a valid email address.'),
+});
+
+export type ProfileData = z.infer<typeof profileDataSchema>;
+
+const profileDataPath = path.join(process.cwd(), 'public', 'profile', 'profile.json');
+
+export async function getProfileData(): Promise<ProfileData> {
+  try {
+    const fileContent = await readFile(profileDataPath, 'utf-8');
+    return JSON.parse(fileContent);
+  } catch (error) {
+    // If the file doesn't exist, create it with default data.
+    const defaultData: ProfileData = {
+      name: 'Thakur Yashraj Singh',
+      description: 'An artist exploring the dance between light and shadow, capturing fleeting moments and emotions on canvas with a blend of classical techniques and modern expressionism.',
+      instagram: 'https://www.instagram.com/yash_._100/',
+      email: 't.yashraj.singh.710@gmail.com',
+    };
+    try {
+      await mkdir(path.dirname(profileDataPath), { recursive: true });
+      await writeFile(profileDataPath, JSON.stringify(defaultData, null, 2));
+      return defaultData;
+    } catch (writeError) {
+       console.error("Could not write initial profile.json", writeError);
+       return defaultData; // return default data even if write fails
+    }
+  }
+}
+
+export async function updateProfileData(data: ProfileData) {
+  try {
+    const validation = profileDataSchema.safeParse(data);
+    if (!validation.success) {
+      return { success: false, error: validation.error.flatten().fieldErrors };
+    }
+
+    await writeFile(profileDataPath, JSON.stringify(validation.data, null, 2));
+    revalidatePath('/');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to update profile data:', error);
+    return { success: false, error: 'An unexpected server error occurred.' };
   }
 }

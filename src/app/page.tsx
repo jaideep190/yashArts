@@ -3,6 +3,9 @@ import path from 'path';
 import Gallery from '@/components/gallery';
 import type { ImageType } from '@/components/art-collage';
 import EditableHeader from '@/components/editable-header';
+import { getProfileData } from '@/app/actions';
+import type { ProfileData } from '@/app/actions';
+
 
 // Helper function to capitalize a string
 function capitalize(str: string) {
@@ -59,10 +62,14 @@ async function getProfilePicture(): Promise<string> {
 export default async function Home() {
   const uploadedImages = await getArtworks();
   const profilePictureSrc = await getProfilePicture();
+  const profileData = await getProfileData();
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
-      <EditableHeader initialProfilePictureSrc={profilePictureSrc} />
+      <EditableHeader 
+        initialProfilePictureSrc={profilePictureSrc}
+        initialProfileData={profileData}
+      />
       <main className="w-full">
          <Gallery initialImages={uploadedImages} />
       </main>
