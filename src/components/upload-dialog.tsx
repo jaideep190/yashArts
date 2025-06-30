@@ -44,39 +44,21 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
     setIsUploading(true);
 
     try {
-      // Get image dimensions
-      const { width, height } = await new Promise<{width: number, height: number}>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const img = new Image();
-          img.onload = () => {
-            resolve({ width: img.width, height: img.height });
-          };
-          img.onerror = reject;
-          if (e.target?.result) {
-            img.src = e.target.result as string;
-          } else {
-            reject(new Error("Failed to read file"));
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-
       // Create FormData and call the server action
       const formData = new FormData();
       formData.append('file', file);
       
       const result = await uploadArtwork(formData);
 
-      if (!result.success || !result.path) {
-        throw new Error(result.error || 'Upload failed. Please try again.');
+      if (!result.success || !result.path || !result.width || !result.height) {
+        throw new Error(result.error || 'Upload failed. The server did not return all required information.');
       }
 
-      // Call parent handler with the new image details
+      // Call parent handler with the new image details from the server
       onUploadComplete({
         src: result.path,
-        width,
-        height,
+        width: result.width,
+        height: result.height,
         alt: file.name.split('.').slice(0, -1).join('.'),
         aiHint: 'uploaded art',
       });
