@@ -15,7 +15,7 @@ const ParticleBackground = () => {
     const foregroundHsl = getComputedStyle(document.documentElement).getPropertyValue('--foreground').trim();
     
     let particles: Particle[] = [];
-    const particleCount = 70;
+    const particleCount = 50;
 
     class Particle {
       x: number;
@@ -31,7 +31,7 @@ const ParticleBackground = () => {
         this.radius = Math.random() * 1.5 + 0.5;
         this.vx = (Math.random() - 0.5) * 0.3;
         this.vy = (Math.random() - 0.5) * 0.3;
-        this.color = `hsla(${foregroundHsl}, ${Math.random() * 0.4 + 0.1})`;
+        this.color = `hsla(${foregroundHsl}, ${Math.random() * 0.2 + 0.05})`;
       }
 
       update() {
