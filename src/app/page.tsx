@@ -1,14 +1,38 @@
-'use client';
-
-import { useState } from 'react';
+import { promises as fs } from 'fs';
+import path from 'path';
 import Image from 'next/image';
-import ArtCollage from '@/components/art-collage';
+import Gallery from '@/components/gallery';
 import type { ImageType } from '@/components/art-collage';
-import UploadDialog from '@/components/upload-dialog';
-import { Button } from '@/components/ui/button';
-import { FilePlus2 } from 'lucide-react';
 
-const initialImages: ImageType[] = [
+async function getArtworks(): Promise<ImageType[]> {
+  const sizeOf = require('image-size');
+  const artDirectory = path.join(process.cwd(), 'public', 'artworks');
+  try {
+    const filenames = await fs.readdir(artDirectory);
+    const imagePromises = filenames
+      .filter(name => /\.(jpg|jpeg|png|gif|webp)$/i.test(name))
+      .map(async (name) => {
+        const filePath = path.join(artDirectory, name);
+        const dimensions = sizeOf(filePath);
+        return {
+          src: `/artworks/${name}`,
+          width: dimensions.width ?? 500,
+          height: dimensions.height ?? 500,
+          alt: name.split('.').slice(0, -1).join(' ').replace(/[-_]/g, ' '),
+          aiHint: 'uploaded art',
+        };
+      });
+    const images = await Promise.all(imagePromises);
+    // Sort by filename which includes timestamp, newest first
+    return images.sort((a, b) => b.src.localeCompare(a.src));
+  } catch (error) {
+    // If the directory doesn't exist, it's not an error, just return empty.
+    console.log("Artworks directory not found, returning empty array.");
+    return [];
+  }
+}
+
+const placeholderImages: ImageType[] = [
   { src: 'https://placehold.co/500x750.png', width: 500, height: 750, alt: 'A painting of a woman in a red dress', aiHint: 'woman painting' },
   { src: 'https://placehold.co/600x400.png', width: 600, height: 400, alt: 'A coastal scene with a lighthouse', aiHint: 'coast lighthouse' },
   { src: 'https://placehold.co/400x500.png', width: 400, height: 500, alt: 'Still life of a vase with flowers', aiHint: 'flower vase' },
@@ -31,13 +55,9 @@ const initialImages: ImageType[] = [
   { src: 'https://placehold.co/700x500.png', width: 700, height: 500, alt: 'A photorealistic drawing of an eye', aiHint: 'eye drawing' },
 ];
 
-export default function Home() {
-  const [images, setImages] = useState<ImageType[]>(initialImages);
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-
-  const handleUploadComplete = (newImage: ImageType) => {
-    setImages(prevImages => [newImage, ...prevImages]);
-  };
+export default async function Home() {
+  const uploadedImages = await getArtworks();
+  const allImages = [...uploadedImages, ...placeholderImages];
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
@@ -57,23 +77,8 @@ export default function Home() {
         </p>
       </header>
       <main className="w-full">
-         <ArtCollage images={images} />
+         <Gallery initialImages={allImages} />
       </main>
-
-      <Button
-        onClick={() => setIsUploadDialogOpen(true)}
-        className="fixed bottom-8 right-8 h-14 w-14 rounded-full shadow-lg"
-        size="icon"
-      >
-        <FilePlus2 className="h-6 w-6" />
-        <span className="sr-only">Upload Artwork</span>
-      </Button>
-
-      <UploadDialog
-        open={isUploadDialogOpen}
-        onOpenChange={setIsUploadDialogOpen}
-        onUploadComplete={handleUploadComplete}
-      />
     </div>
   );
 }

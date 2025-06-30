@@ -8,8 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import type { ImageType } from '@/components/art-collage';
-import { storage } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uploadArtwork } from '@/app/actions';
 
 interface UploadDialogProps {
   open: boolean;
@@ -45,7 +44,7 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
     setIsUploading(true);
 
     try {
-      // 1. Get image dimensions on the client
+      // Get image dimensions
       const { width, height } = await new Promise<{width: number, height: number}>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -63,16 +62,19 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
         reader.readAsDataURL(file);
       });
 
-      // 2. Upload file to Firebase Storage
-      const destFileName = `artworks/${Date.now()}-${file.name.replace(/\s/g, '_')}`;
-      const storageRef = ref(storage, destFileName);
+      // Create FormData and call the server action
+      const formData = new FormData();
+      formData.append('file', file);
       
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
+      const result = await uploadArtwork(formData);
 
-      // 3. Call parent handler with the new image details
+      if (!result.success || !result.path) {
+        throw new Error(result.error || 'Upload failed. Please try again.');
+      }
+
+      // Call parent handler with the new image details
       onUploadComplete({
-        src: downloadURL,
+        src: result.path,
         width,
         height,
         alt: file.name.split('.').slice(0, -1).join('.'),
@@ -100,7 +102,7 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
         <DialogHeader>
           <DialogTitle>Upload New Artwork</DialogTitle>
           <DialogDescription>
-            Enter your secret key and choose a file to add to your gallery.
+            Enter your secret key and choose a file to add to your gallery. Note: Uploads only persist in local development.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
