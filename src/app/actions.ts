@@ -1,32 +1,34 @@
 'use server';
 
-import { writeFile, mkdir, readFile } from 'fs/promises';
-import path from 'path';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import {
+  collection,
+  doc,
+  getDocs,
+  setDoc,
+  deleteDoc,
+  query,
+  orderBy,
+  writeBatch,
+  getDoc,
+  updateDoc,
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import type { ImageType } from '@/components/art-collage';
 import { imagekit } from '@/lib/imagekit';
 
-const artworksDataPath = path.join(process.cwd(), 'src', 'data', 'artworks.json');
+// Firestore collection references
+const artworksCollection = collection(db, 'artworks');
+const profileCollection = collection(db, 'profile');
 
-async function readArtworksData(): Promise<ImageType[]> {
-  try {
-    const fileContent = await readFile(artworksDataPath, 'utf-8');
-    return JSON.parse(fileContent);
-  } catch (error) {
-    return [];
-  }
-}
-
-async function writeArtworksData(data: ImageType[]) {
-  await mkdir(path.dirname(artworksDataPath), { recursive: true });
-  await writeFile(artworksDataPath, JSON.stringify(data, null, 2));
-}
-
+// Artwork Data Management
 export async function getArtworks(): Promise<ImageType[]> {
   try {
-    const artworks = await readArtworksData();
-    return artworks;
+    const q = query(artworksCollection, orderBy('order', 'desc'));
+    const artworksSnapshot = await getDocs(q);
+    const artworksList = artworksSnapshot.docs.map(doc => doc.data() as ImageType);
+    return artworksList;
   } catch (error) {
     console.error("Failed to get artworks:", error);
     return [];
@@ -56,7 +58,9 @@ export async function uploadArtwork(formData: FormData) {
       useUniqueFileName: true,
     });
 
-    const newArtwork: ImageType = {
+    const artworkRef = doc(artworksCollection, uploadResponse.fileId);
+
+    const newArtwork: ImageType & { order: number } = {
         src: uploadResponse.url,
         fileId: uploadResponse.fileId,
         width: uploadResponse.width ?? 500,
@@ -64,17 +68,19 @@ export async function uploadArtwork(formData: FormData) {
         alt: title,
         title: title,
         aiHint: 'uploaded art',
+        order: Date.now(),
     };
-
-    const allArtworks = await readArtworksData();
-    allArtworks.unshift(newArtwork);
-    await writeArtworksData(allArtworks);
+    
+    await setDoc(artworkRef, newArtwork);
 
     revalidatePath('/');
 
+    // Return only ImageType fields
+    const { order, ...returnedArtwork } = newArtwork;
+
     return { 
       success: true, 
-      artwork: newArtwork,
+      artwork: returnedArtwork,
     };
   } catch (error: any) {
     console.error('Upload failed:', error);
@@ -91,11 +97,8 @@ export async function deleteArtwork(fileId: string) {
     // First, delete from ImageKit
     await imagekit.deleteFile(fileId);
 
-    // Then, remove from our JSON data
-    const allArtworks = await readArtworksData();
-    const updatedArtworks = allArtworks.filter(art => art.fileId !== fileId);
-    
-    await writeArtworksData(updatedArtworks);
+    // Then, remove from Firestore
+    await deleteDoc(doc(artworksCollection, fileId));
 
     revalidatePath('/');
     return { success: true };
@@ -111,7 +114,16 @@ export async function updateArtworkOrder(artworks: ImageType[]) {
   }
   
   try {
-    await writeArtworksData(artworks);
+    const batch = writeBatch(db);
+    const newOrderBase = Date.now();
+    
+    artworks.forEach((artwork, index) => {
+      const artworkRef = doc(artworksCollection, artwork.fileId);
+      // Decrementing index from a base timestamp to maintain descending order
+      batch.update(artworkRef, { order: newOrderBase - index });
+    });
+    
+    await batch.commit();
     revalidatePath('/');
     return { success: true };
   } catch (error: any) {
@@ -122,7 +134,6 @@ export async function updateArtworkOrder(artworks: ImageType[]) {
 
 
 // Profile Data Management
-
 const profileDataSchema = z.object({
   name: z.string().min(1, 'Name is required.'),
   description: z.string().min(1, 'Description is required.'),
@@ -134,14 +145,43 @@ const profileDataSchema = z.object({
 
 export type ProfileData = z.infer<typeof profileDataSchema>;
 
-const profileDataPath = path.join(process.cwd(), 'public', 'profile', 'profile.json');
+const defaultProfileData: ProfileData = {
+    name: 'Thakur Yashraj Singh',
+    description: 'An artist exploring the dance between light and shadow, capturing fleeting moments and emotions on canvas with a blend of classical techniques and modern expressionism.',
+    instagram: 'https://www.instagram.com/yash_._100/',
+    email: 't.yashraj.singh.710@gmail.com',
+    profilePictureUrl: null,
+    profilePictureFileId: null,
+};
 
+export async function getProfileData(): Promise<ProfileData> {
+  const profileDocRef = doc(profileCollection, 'main');
+  try {
+    const docSnap = await getDoc(profileDocRef);
+    if (docSnap.exists()) {
+      // Basic validation to ensure data shape is correct
+      const data = docSnap.data();
+      const parsed = profileDataSchema.safeParse(data);
+      if (parsed.success) {
+        return parsed.data;
+      }
+    }
+    // If doc doesn't exist or is malformed, create it with default data
+    await setDoc(profileDocRef, defaultProfileData);
+    return defaultProfileData;
+  } catch (error) {
+    console.error("Error fetching/creating profile data, returning defaults:", error);
+    return defaultProfileData; // Return default data on error to prevent app crash
+  }
+}
 
 export async function uploadProfilePicture(formData: FormData) {
   const file = formData.get('file') as File;
   if (!file) {
     return { success: false, error: 'No file provided.' };
   }
+
+  const profileDocRef = doc(profileCollection, 'main');
 
   try {
     // Delete the old profile picture if it exists
@@ -160,13 +200,10 @@ export async function uploadProfilePicture(formData: FormData) {
       isPrivateFile: false,
     });
 
-    const updatedProfileData: ProfileData = {
-        ...currentProfileData,
+    await updateDoc(profileDocRef, {
         profilePictureUrl: uploadResponse.url,
         profilePictureFileId: uploadResponse.fileId,
-    }
-
-    await writeProfileData(updatedProfileData);
+    });
 
     revalidatePath('/');
 
@@ -183,37 +220,8 @@ export async function uploadProfilePicture(formData: FormData) {
   }
 }
 
-
-export async function getProfileData(): Promise<ProfileData> {
-  try {
-    const fileContent = await readFile(profileDataPath, 'utf-8');
-    return JSON.parse(fileContent);
-  } catch (error) {
-    const defaultData: ProfileData = {
-      name: 'Thakur Yashraj Singh',
-      description: 'An artist exploring the dance between light and shadow, capturing fleeting moments and emotions on canvas with a blend of classical techniques and modern expressionism.',
-      instagram: 'https://www.instagram.com/yash_._100/',
-      email: 't.yashraj.singh.710@gmail.com',
-      profilePictureUrl: null,
-      profilePictureFileId: null,
-    };
-    try {
-      await writeProfileData(defaultData);
-      return defaultData;
-    } catch (writeError) {
-       console.error("Could not write initial profile.json", writeError);
-       return defaultData;
-    }
-  }
-}
-
-async function writeProfileData(data: ProfileData) {
-    await mkdir(path.dirname(profileDataPath), { recursive: true });
-    await writeFile(profileDataPath, JSON.stringify(data, null, 2));
-}
-
-
 export async function updateProfileData(data: Omit<ProfileData, 'profilePictureUrl' | 'profilePictureFileId'>) {
+  const profileDocRef = doc(profileCollection, 'main');
   try {
     const currentData = await getProfileData();
     const newData = { ...currentData, ...data };
@@ -223,7 +231,9 @@ export async function updateProfileData(data: Omit<ProfileData, 'profilePictureU
       return { success: false, error: validation.error.flatten().fieldErrors };
     }
 
-    await writeProfileData(validation.data);
+    // Use setDoc to overwrite the document with the new validated data,
+    // which mimics the behavior of the previous file-based storage.
+    await setDoc(profileDocRef, validation.data);
     revalidatePath('/');
     return { success: true };
   } catch (error: any) {
