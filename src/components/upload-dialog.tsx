@@ -16,10 +16,7 @@ interface UploadDialogProps {
   onUploadComplete: (image: ImageType) => void;
 }
 
-const SECRET_KEY = 'yasharts-secret';
-
 export default function UploadDialog({ open, onOpenChange, onUploadComplete }: UploadDialogProps) {
-  const [secretKey, setSecretKey] = React.useState('');
   const [file, setFile] = React.useState<File | null>(null);
   const [isUploading, setIsUploading] = React.useState(false);
   const { toast } = useToast();
@@ -32,7 +29,6 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
   };
 
   const resetDialog = () => {
-    setSecretKey('');
     setFile(null);
     setIsUploading(false);
     if (fileInputRef.current) {
@@ -41,11 +37,6 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
   };
 
   const handleUpload = async () => {
-    if (secretKey !== SECRET_KEY) {
-      toast({ title: 'Error', description: 'Invalid secret key.', variant: 'destructive' });
-      return;
-    }
-    
     if (!file) {
       toast({ title: 'Error', description: 'Please select a file to upload.', variant: 'destructive' });
       return;
@@ -68,7 +59,7 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
           aiHint: 'uploaded art',
         });
         toast({ title: 'Success', description: 'Your artwork has been uploaded.' });
-        onOpenChange(false); // Close the dialog on success
+        onOpenChange(false);
       } else {
         toast({ title: 'Upload Failed', description: result.error, variant: 'destructive' });
       }
@@ -84,7 +75,6 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
     }
   };
   
-  // This function ensures the dialog state is reset whenever it's closed.
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       resetDialog();
@@ -98,28 +88,17 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
         <DialogHeader>
           <DialogTitle>Upload New Artwork</DialogTitle>
           <DialogDescription>
-            Enter your secret key and choose a file to add to your gallery. Note: Uploads only persist in local development.
+            Choose a file to add to your gallery.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid w-full max-w-sm items-center gap-1.5">
-            <Label htmlFor="secret-key">Secret Key</Label>
-            <Input
-              id="secret-key"
-              type="password"
-              placeholder="Your secret key"
-              value={secretKey}
-              onChange={(e) => setSecretKey(e.target.value)}
-              disabled={isUploading}
-            />
-          </div>
           <div className="grid w-full max-w-sm items-center gap-1.5">
             <Label htmlFor="picture">Picture</Label>
             <Input ref={fileInputRef} id="picture" type="file" onChange={handleFileChange} accept="image/*" disabled={isUploading} />
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleUpload} disabled={isUploading || !file || !secretKey}>
+          <Button onClick={handleUpload} disabled={isUploading || !file}>
             {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isUploading ? 'Uploading...' : 'Upload'}
           </Button>
