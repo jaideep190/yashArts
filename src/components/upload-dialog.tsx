@@ -8,13 +8,16 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import type { ImageType } from '@/components/art-collage';
-import { uploadArtwork } from '@/app/actions';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 interface UploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUploadComplete: (image: ImageType) => void;
 }
+
+const SECRET_KEY = 'yasharts-secret';
 
 export default function UploadDialog({ open, onOpenChange, onUploadComplete }: UploadDialogProps) {
   const [secretKey, setSecretKey] = useState('');
@@ -28,14 +31,12 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
     }
   };
 
-  const resetState = () => {
-      setSecretKey('');
-      setFile(null);
-      setIsUploading(false);
-      onOpenChange(false);
-  }
-
   const handleUpload = async () => {
+    if (secretKey !== SECRET_KEY) {
+      toast({ title: 'Error', description: 'Invalid secret key.', variant: 'destructive' });
+      return;
+    }
+    
     if (!file) {
       toast({ title: 'Error', description: 'Please select a file to upload.', variant: 'destructive' });
       return;
@@ -62,29 +63,29 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
         reader.readAsDataURL(file);
       });
 
-      // 2. Prepare form data for Server Action
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('secretKey', secretKey);
+      // 2. Upload file to Firebase Storage
+      const destFileName = `artworks/${Date.now()}-${file.name.replace(/\s/g, '_')}`;
+      const storageRef = ref(storage, destFileName);
+      
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
 
-      // 3. Call server action
-      const result = await uploadArtwork(formData);
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      // 4. Call parent handler with the new image details
+      // 3. Call parent handler with the new image details
       onUploadComplete({
-        src: result.downloadURL,
+        src: downloadURL,
         width,
         height,
-        alt: file.name.split('.').slice(0, -1).join('.'), // Use filename as alt text
+        alt: file.name.split('.').slice(0, -1).join('.'),
         aiHint: 'uploaded art',
       });
 
       toast({ title: 'Success', description: 'Your artwork has been uploaded.' });
-      resetState();
+      
+      // Reset state and close dialog
+      setSecretKey('');
+      setFile(null);
+      setIsUploading(false);
+      onOpenChange(false);
 
     } catch (error: any) {
       console.error("Upload failed:", error);
