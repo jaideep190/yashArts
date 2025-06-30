@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/context/auth-context';
 import { ImageKitProvider } from '@/components/imagekit-provider';
+import ParticleBackground from '@/components/particle-background';
 
 export const metadata: Metadata = {
   title: 'YashArts',
@@ -21,7 +22,8 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Alegreya&family=Belleza&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased animated-gradient">
+      <body className="font-body antialiased bg-background text-foreground">
+        <ParticleBackground />
         <AuthProvider>
           <ImageKitProvider>
             {children}
