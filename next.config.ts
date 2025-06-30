@@ -1,7 +1,6 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -18,8 +17,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  serverActions: {
-    bodySizeLimit: '10mb',
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '100mb',
+    },
   },
 };
 
