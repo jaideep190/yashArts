@@ -32,7 +32,7 @@ export default function ArtCollage({ images }: ArtCollageProps) {
     <>
       <div className="container mx-auto px-4 py-8">
         {images.length > 0 ? (
-          <div className="columns-2 gap-4 md:columns-3 lg:columns-4">
+          <div className="columns-1 gap-4 sm:columns-2 md:columns-3 lg:columns-4">
             {images.map((image, index) => (
               <div
                 key={image.src + index}
@@ -48,7 +48,7 @@ export default function ArtCollage({ images }: ArtCollageProps) {
                   height={image.height}
                   className="w-full h-auto transition-transform duration-300 ease-in-out group-hover:scale-105"
                   data-ai-hint={image.aiHint}
-                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 />
               </div>
             ))}
