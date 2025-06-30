@@ -81,22 +81,22 @@ export default function ImageModal({ image, onClose, onDelete }: ImageModalProps
         aria-modal="true"
         aria-labelledby="image-modal-title"
       >
-        <div className="relative w-full h-full flex items-center justify-center">
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[calc(50%+4rem)] text-center text-white drop-shadow-lg">
+        <div className="relative max-w-full max-h-full flex flex-col items-center justify-center gap-4">
+            <div className="text-center text-white drop-shadow-lg">
                 <h2 id="image-modal-title" className="font-headline text-3xl md:text-4xl">
                     {image.title || image.alt}
                 </h2>
             </div>
-          <div className="relative">
-            <Image
-              src={image.src}
-              alt={image.alt}
-              width={image.width}
-              height={image.height}
-              className="object-contain block rounded-lg shadow-2xl"
-              style={{ maxHeight: '80vh', maxWidth: '90vw' }}
-            />
-          </div>
+            <div className="relative">
+                <Image
+                src={image.src}
+                alt={image.alt}
+                width={image.width}
+                height={image.height}
+                className="object-contain block rounded-lg shadow-2xl"
+                style={{ maxHeight: '80vh', maxWidth: '90vw' }}
+                />
+            </div>
         </div>
         
         {user && (
