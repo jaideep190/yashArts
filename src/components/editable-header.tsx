@@ -4,7 +4,7 @@ import * as React from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
-import { Pencil } from 'lucide-react';
+import { Pencil, Instagram, Mail } from 'lucide-react';
 import UploadProfileDialog from './upload-profile-dialog';
 import type { ImageType } from './art-collage';
 
@@ -58,6 +58,21 @@ export default function EditableHeader({ initialProfilePictureSrc }: EditableHea
                 <p className="font-body text-base md:text-lg max-w-xl text-muted-foreground">
                     An artist exploring the dance between light and shadow, capturing fleeting moments and emotions on canvas with a blend of classical techniques and modern expressionism.
                 </p>
+
+                <div className="flex items-center justify-center gap-4 pt-2">
+                    <Button asChild variant="outline" className="rounded-full px-4 transition-all hover:shadow-md hover:-translate-y-1">
+                        <a href="https://www.instagram.com/yash_._100/" target="_blank" rel="noopener noreferrer" aria-label="Instagram profile">
+                            <Instagram />
+                            <span>Instagram</span>
+                        </a>
+                    </Button>
+                    <Button asChild variant="outline" className="rounded-full px-4 transition-all hover:shadow-md hover:-translate-y-1">
+                        <a href="mailto:t.yashraj.singh.710@gmail.com" aria-label="Send an email">
+                            <Mail />
+                            <span>Email</span>
+                        </a>
+                    </Button>
+                </div>
             </header>
 
             {user && (
