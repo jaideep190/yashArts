@@ -56,22 +56,31 @@ export default function UploadDialog({ open, onOpenChange, onUploadComplete }: U
     const formData = new FormData();
     formData.append('file', file);
     
-    const result = await uploadArtwork(formData);
+    try {
+      const result = await uploadArtwork(formData);
 
-    setIsUploading(false);
-
-    if (result.success) {
-      onUploadComplete({
-        src: result.path!,
-        width: result.width!,
-        height: result.height!,
-        alt: file.name.split('.').slice(0, -1).join('.'),
-        aiHint: 'uploaded art',
+      if (result.success) {
+        onUploadComplete({
+          src: result.path!,
+          width: result.width!,
+          height: result.height!,
+          alt: file.name.split('.').slice(0, -1).join('.'),
+          aiHint: 'uploaded art',
+        });
+        toast({ title: 'Success', description: 'Your artwork has been uploaded.' });
+        onOpenChange(false); // Close the dialog on success
+      } else {
+        toast({ title: 'Upload Failed', description: result.error, variant: 'destructive' });
+      }
+    } catch (error) {
+      console.error('Upload failed on client:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Upload Error',
+        description: 'An unexpected error occurred. Please try again.',
       });
-      toast({ title: 'Success', description: 'Your artwork has been uploaded.' });
-      onOpenChange(false); // Close the dialog on success
-    } else {
-      toast({ title: 'Upload Failed', description: result.error, variant: 'destructive' });
+    } finally {
+        setIsUploading(false);
     }
   };
   
