@@ -1,7 +1,14 @@
+'use client';
+
+import { useState } from 'react';
 import Image from 'next/image';
 import ArtCollage from '@/components/art-collage';
+import type { ImageType } from '@/components/art-collage';
+import UploadDialog from '@/components/upload-dialog';
+import { Button } from '@/components/ui/button';
+import { FilePlus2 } from 'lucide-react';
 
-const images = [
+const initialImages: ImageType[] = [
   { src: 'https://placehold.co/500x750.png', width: 500, height: 750, alt: 'A painting of a woman in a red dress', aiHint: 'woman painting' },
   { src: 'https://placehold.co/600x400.png', width: 600, height: 400, alt: 'A coastal scene with a lighthouse', aiHint: 'coast lighthouse' },
   { src: 'https://placehold.co/400x500.png', width: 400, height: 500, alt: 'Still life of a vase with flowers', aiHint: 'flower vase' },
@@ -25,6 +32,13 @@ const images = [
 ];
 
 export default function Home() {
+  const [images, setImages] = useState<ImageType[]>(initialImages);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+
+  const handleUploadComplete = (newImage: ImageType) => {
+    setImages(prevImages => [newImage, ...prevImages]);
+  };
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
       <header className="flex w-full flex-col items-center gap-4 pt-12 md:pt-20 text-center px-4">
@@ -37,7 +51,7 @@ export default function Home() {
           className="rounded-full object-cover border-4 border-card shadow-lg"
           data-ai-hint="artist portrait"
         />
-        <h1 className="font-headline text-4xl md:text-6xl tracking-wider">Amelia Sinclair</h1>
+        <h1 className="font-headline text-4xl md:text-6xl tracking-wider">Thakur Yashraj Singh</h1>
         <p className="font-body text-base md:text-lg max-w-xl text-muted-foreground">
           An artist exploring the dance between light and shadow, capturing fleeting moments and emotions on canvas with a blend of classical techniques and modern expressionism.
         </p>
@@ -45,6 +59,21 @@ export default function Home() {
       <main className="w-full">
          <ArtCollage images={images} />
       </main>
+
+      <Button
+        onClick={() => setIsUploadDialogOpen(true)}
+        className="fixed bottom-8 right-8 h-14 w-14 rounded-full shadow-lg"
+        size="icon"
+      >
+        <FilePlus2 className="h-6 w-6" />
+        <span className="sr-only">Upload Artwork</span>
+      </Button>
+
+      <UploadDialog
+        open={isUploadDialogOpen}
+        onOpenChange={setIsUploadDialogOpen}
+        onUploadComplete={handleUploadComplete}
+      />
     </div>
   );
 }
