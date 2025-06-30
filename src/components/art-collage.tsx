@@ -21,14 +21,14 @@ export default function ArtCollage({ images }: ArtCollageProps) {
           {images.map((image, index) => (
             <div
               key={image.src + index}
-              className="group relative aspect-square overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl"
+              className="group relative overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl"
             >
               <Image
                 src={image.src}
                 alt={image.alt}
                 width={image.width}
                 height={image.height}
-                className="h-full w-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
+                className="w-full h-auto transition-transform duration-300 ease-in-out group-hover:scale-105"
                 data-ai-hint={image.aiHint}
                 sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
               />
