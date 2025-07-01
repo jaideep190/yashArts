@@ -2,8 +2,6 @@
 
 import * as React from 'react';
 import { IKImage } from 'imagekitio-react';
-import { FileQuestion, Pin } from 'lucide-react';
-import { useAuth } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
 import {
   DndContext,
@@ -41,7 +39,7 @@ interface ArtCollageProps {
   onImageClick: (image: ImageType) => void;
 }
 
-// Separate component for each image to handle sorting and display logic
+// This component is now only for draggable, unpinned items.
 function CollageItem({ image, isEditMode, onImageClick }: { image: ImageType; isEditMode: boolean; onImageClick: (image: ImageType) => void; }) {
   const {
     attributes,
@@ -50,7 +48,7 @@ function CollageItem({ image, isEditMode, onImageClick }: { image: ImageType; is
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: image.fileId, disabled: !isEditMode || !!image.pinned });
+  } = useSortable({ id: image.fileId, disabled: !isEditMode });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -59,7 +57,7 @@ function CollageItem({ image, isEditMode, onImageClick }: { image: ImageType; is
     zIndex: isDragging ? 99 : 'auto',
   };
 
-  const canDrag = isEditMode && !image.pinned;
+  const canDrag = isEditMode;
 
   return (
     <div
@@ -69,8 +67,7 @@ function CollageItem({ image, isEditMode, onImageClick }: { image: ImageType; is
       {...(canDrag ? listeners : {})}
       className={cn(
         "group relative mb-4 break-inside-avoid overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl will-change-transform",
-        canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
-        image.pinned && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+        canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
       )}
       onClick={() => onImageClick(image)}
       role="button"
@@ -85,21 +82,16 @@ function CollageItem({ image, isEditMode, onImageClick }: { image: ImageType; is
         lqip={{ active: true }}
         loading="lazy"
       />
-      {image.pinned && (
-        <div className="absolute top-2 right-2 bg-primary/80 text-primary-foreground rounded-full p-1.5 shadow-md backdrop-blur-sm">
-            <Pin className="h-4 w-4" />
-        </div>
-      )}
     </div>
   );
 }
 
+// This component now only receives and renders unpinned images.
 export default function ArtCollage({ images, onOrderChange, isEditMode, onImageClick }: ArtCollageProps) {
   const [activeImage, setActiveImage] = React.useState<ImageType | null>(null);
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      // Small delay to allow clicking without starting a drag
       activationConstraint: {
         delay: 150,
         tolerance: 5,
@@ -109,8 +101,7 @@ export default function ArtCollage({ images, onOrderChange, isEditMode, onImageC
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    const sortableImages = images.filter(img => !img.pinned);
-    setActiveImage(sortableImages.find(img => img.fileId === active.id) || null);
+    setActiveImage(images.find(img => img.fileId === active.id) || null);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -118,28 +109,19 @@ export default function ArtCollage({ images, onOrderChange, isEditMode, onImageC
     setActiveImage(null);
 
     if (over && active.id !== over.id) {
-      const sortableImages = images.filter(img => !img.pinned);
-      const oldIndex = sortableImages.findIndex((img) => img.fileId === active.id);
-      const newIndex = sortableImages.findIndex((img) => img.fileId === over.id);
+      const oldIndex = images.findIndex((img) => img.fileId === active.id);
+      const newIndex = images.findIndex((img) => img.fileId === over.id);
 
       if (oldIndex !== -1 && newIndex !== -1) {
-        // onOrderChange expects the newly sorted list of *unpinned* images
-        onOrderChange(arrayMove(sortableImages, oldIndex, newIndex));
+        onOrderChange(arrayMove(images, oldIndex, newIndex));
       }
     }
   };
   
-  // We only want to make unpinned items sortable
-  const sortableImageIds = React.useMemo(() => images.filter(im => !im.pinned).map(im => im.fileId), [images]);
+  const sortableImageIds = React.useMemo(() => images.map(im => im.fileId), [images]);
 
   if (images.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center py-24 text-center text-muted-foreground">
-            <FileQuestion className="h-16 w-16 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Your Gallery is Empty</h3>
-            <p>Click the upload button to add your first piece of art.</p>
-        </div>
-      );
+    return null;
   }
 
   return (
@@ -151,7 +133,6 @@ export default function ArtCollage({ images, onOrderChange, isEditMode, onImageC
       onDragCancel={() => setActiveImage(null)}
     >
       <div className="columns-2 md:columns-3 lg:columns-4 gap-4">
-        {/* We provide only the sortable IDs to SortableContext */}
         <SortableContext items={sortableImageIds} strategy={verticalListSortingStrategy}>
           {images.map((image) => (
             <CollageItem
