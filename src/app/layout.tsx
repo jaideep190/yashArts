@@ -6,7 +6,7 @@ import { ImageKitProvider } from '@/components/imagekit-provider';
 import ParticleBackground from '@/components/particle-background';
 
 const siteUrl = 'https://yasharts-portfolio.vercel.app';
-const previewImageUrl = 'https://drive.google.com/drive-viewer/AKGpihZbOfpK05qqMm_L3gpS022olz-vNN95WsfTXJBpVOoCCqPDOoqoj3acuAVG2lxBj8v_hx2X1G4ki4XD_WWD2CV-3D5PRw4cOg=w1910-h885-rw-v1';
+const previewImageUrl = 'https://ik.imagekit.io/jaideep190/uploads/preview.png';
 
 export const metadata: Metadata = {
   title: 'YashArts',

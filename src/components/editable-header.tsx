@@ -57,8 +57,8 @@ export default function EditableHeader({ initialProfilePictureSrc, initialProfil
                         <Image
                             src={profilePic}
                             alt={`Profile picture of ${profileData.name}`}
-                            width={128}
-                            height={128}
+                            width={144}
+                            height={144}
                             priority
                             key={profilePic}
                             className="rounded-full object-cover border-4 border-card shadow-lg"
@@ -68,8 +68,8 @@ export default function EditableHeader({ initialProfilePictureSrc, initialProfil
                         <IKImage
                             src={profilePic}
                             alt={`Profile picture of ${profileData.name}`}
-                            width={128}
-                            height={128}
+                            width={144}
+                            height={144}
                             key={profilePic}
                             className="rounded-full object-cover border-4 border-card shadow-lg"
                             lqip={{ active: true }}
