@@ -3,7 +3,6 @@
 import * as React from 'react';
 import { IKImage } from 'imagekitio-react';
 import { FileQuestion } from 'lucide-react';
-import ImageModal from './image-modal';
 import { useAuth } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
 import {
@@ -37,14 +36,12 @@ export type ImageType = {
 
 interface ArtCollageProps {
   images: ImageType[];
-  onDelete: (fileId: string) => void;
   onOrderChange: (images: ImageType[]) => void;
-  onUpdate: (image: ImageType) => void;
   isEditMode: boolean;
+  onImageClick: (image: ImageType) => void;
 }
 
-export default function ArtCollage({ images, onDelete, onOrderChange, onUpdate, isEditMode }: ArtCollageProps) {
-  const [selectedImage, setSelectedImage] = React.useState<ImageType | null>(null);
+export default function ArtCollage({ images, onOrderChange, isEditMode, onImageClick }: ArtCollageProps) {
   const [activeImage, setActiveImage] = React.useState<ImageType | null>(null);
   const { user } = useAuth();
 
@@ -121,20 +118,6 @@ export default function ArtCollage({ images, onDelete, onOrderChange, onUpdate, 
     })
   );
 
-  const openModal = (image: ImageType) => {
-    if (isEditMode) return;
-    setSelectedImage(image);
-  };
-
-  const closeModal = () => {
-    setSelectedImage(null);
-  };
-
-  const handleUpdateAndClose = (updatedImage: ImageType) => {
-    onUpdate(updatedImage);
-    setSelectedImage(updatedImage);
-  };
-
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     setActiveImage(images.find(img => img.fileId === active.id) || null);
@@ -162,12 +145,12 @@ export default function ArtCollage({ images, onDelete, onOrderChange, onUpdate, 
         <div className="columns-2 md:columns-3 lg:columns-4 gap-4">
           {images.map((image) => (
              user ? (
-              <SortableImage key={image.fileId} image={image} onClick={() => openModal(image)} />
+              <SortableImage key={image.fileId} image={image} onClick={() => onImageClick(image)} />
             ) : (
               <div
                 key={image.fileId}
                 className="group relative mb-4 break-inside-avoid overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl cursor-pointer will-change-transform"
-                onClick={() => openModal(image)}
+                onClick={() => onImageClick(image)}
                 role="button"
                 aria-label={`View larger image for ${image.alt}`}
               >
@@ -194,42 +177,24 @@ export default function ArtCollage({ images, onDelete, onOrderChange, onUpdate, 
     </>
   );
 
-  const commonModalProps = {
-    onClose: closeModal,
-    onDelete: onDelete,
-    onUpdate: handleUpdateAndClose,
-  };
-
   if (!user) {
-    return (
-      <>
-        <div className="container mx-auto px-4 py-8">
-          {galleryContent}
-        </div>
-        {selectedImage && <ImageModal image={selectedImage} {...commonModalProps} />}
-      </>
-    );
+    return <>{galleryContent}</>;
   }
 
   return (
-    <>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onDragCancel={() => setActiveImage(null)}
-      >
-        <SortableContext items={imageIds} strategy={verticalListSortingStrategy}>
-          <div className="container mx-auto px-4 py-8">
-            {galleryContent}
-          </div>
-        </SortableContext>
-        <DragOverlay dropAnimation={null}>
-            {activeImage ? <DraggableImagePreview image={activeImage} /> : null}
-        </DragOverlay>
-      </DndContext>
-      {selectedImage && <ImageModal image={selectedImage} {...commonModalProps} />}
-    </>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={() => setActiveImage(null)}
+    >
+      <SortableContext items={imageIds} strategy={verticalListSortingStrategy}>
+        {galleryContent}
+      </SortableContext>
+      <DragOverlay dropAnimation={null}>
+          {activeImage ? <DraggableImagePreview image={activeImage} /> : null}
+      </DragOverlay>
+    </DndContext>
   );
 }
