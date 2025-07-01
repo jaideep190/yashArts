@@ -104,13 +104,13 @@ export default function Gallery({ initialImages }: GalleryProps) {
     return (
       <>
         {pinnedImages.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-4">
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {pinnedImages.map(image => (
                 <div
                   key={image.fileId}
                   onClick={() => openModal(image)}
-                  className="group relative aspect-square cursor-pointer overflow-hidden rounded-xl shadow-lg ring-2 ring-primary ring-offset-2 ring-offset-background transition-all duration-300 ease-in-out hover:shadow-2xl will-change-transform"
+                  className="group relative cursor-pointer overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl will-change-transform"
                   role="button"
                   aria-label={image.alt}
                 >
@@ -119,11 +119,11 @@ export default function Gallery({ initialImages }: GalleryProps) {
                     alt={image.alt}
                     width={image.width}
                     height={image.height}
-                    className="h-full w-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
+                    className="h-auto w-full transition-transform duration-300 ease-in-out group-hover:scale-105"
                     lqip={{ active: true }}
                     loading="lazy"
                   />
-                  <div className="absolute top-2 right-2 rounded-full bg-primary/80 p-1.5 text-primary-foreground shadow-md backdrop-blur-sm">
+                  <div className="absolute top-2 right-2 flex items-center justify-center rounded-full bg-primary/80 p-1 text-primary-foreground shadow-md backdrop-blur-sm">
                     <Pin className="h-4 w-4" />
                   </div>
                 </div>
@@ -132,6 +132,7 @@ export default function Gallery({ initialImages }: GalleryProps) {
             {regularImages.length > 0 && <div className="my-8 h-px w-full bg-border" />}
           </div>
         )}
+        
         <ArtCollage 
           images={regularImages} 
           onOrderChange={handleOrderChange}
