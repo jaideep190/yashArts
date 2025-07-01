@@ -5,9 +5,10 @@ import Image from 'next/image';
 import { IKImage } from 'imagekitio-react';
 import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
-import { Pencil, Instagram, Mail, Edit } from 'lucide-react';
+import { Pencil, Edit, MessageSquare } from 'lucide-react';
 import UploadProfileDialog from './upload-profile-dialog';
 import EditProfileDialog from './edit-profile-dialog';
+import ContactDialog from './contact-dialog';
 import type { ImageType } from './art-collage';
 import type { ProfileData } from '@/app/actions';
 
@@ -21,6 +22,7 @@ export default function EditableHeader({ initialProfilePictureSrc, initialProfil
     const [profileData, setProfileData] = React.useState(initialProfileData);
     const [isUploadDialogOpen, setIsUploadDialogOpen] = React.useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+    const [isContactDialogOpen, setIsContactDialogOpen] = React.useState(false);
     const { user } = useAuth();
 
     const handleUploadComplete = (newImage: ImageType) => {
@@ -94,24 +96,21 @@ export default function EditableHeader({ initialProfilePictureSrc, initialProfil
                 </p>
 
                 <div className="flex items-center justify-center gap-4 pt-2">
-                    {profileData.instagram && (
-                        <Button asChild variant="outline" className="rounded-full px-4 transition-all hover:shadow-md hover:-translate-y-1">
-                            <a href={profileData.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram profile">
-                                <Instagram />
-                                <span>Instagram</span>
-                            </a>
-                        </Button>
-                    )}
-                    {profileData.email && (
-                         <Button asChild variant="outline" className="rounded-full px-4 transition-all hover:shadow-md hover:-translate-y-1">
-                            <a href={`mailto:${profileData.email}`} aria-label="Send an email">
-                                <Mail />
-                                <span>Email</span>
-                            </a>
-                        </Button>
-                    )}
+                     <Button 
+                        onClick={() => setIsContactDialogOpen(true)}
+                        className="rounded-full px-6 transition-all hover:shadow-md hover:-translate-y-1"
+                    >
+                        <MessageSquare className="mr-2 h-5 w-5" />
+                        Contact Me for Projects
+                    </Button>
                 </div>
             </header>
+
+            <ContactDialog 
+                open={isContactDialogOpen}
+                onOpenChange={setIsContactDialogOpen}
+                profileData={profileData}
+            />
 
             {user && (
                 <>

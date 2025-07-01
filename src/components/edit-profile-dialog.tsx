@@ -32,6 +32,7 @@ const profileFormSchema = z.object({
   description: z.string().min(1, 'Description is required.'),
   instagram: z.string().url('Must be a valid URL (e.g., https://...)').or(z.literal('')),
   email: z.string().email('Please enter a valid email address.'),
+  phoneNumber: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -47,6 +48,7 @@ export default function EditProfileDialog({ open, onOpenChange, profileData }: E
       description: profileData.description,
       instagram: profileData.instagram || '',
       email: profileData.email,
+      phoneNumber: profileData.phoneNumber || '',
     },
   });
 
@@ -56,6 +58,7 @@ export default function EditProfileDialog({ open, onOpenChange, profileData }: E
       description: profileData.description,
       instagram: profileData.instagram || '',
       email: profileData.email,
+      phoneNumber: profileData.phoneNumber || '',
     });
   }, [profileData, form]);
 
@@ -135,6 +138,23 @@ export default function EditProfileDialog({ open, onOpenChange, profileData }: E
                   <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input placeholder="your@email.com" type="email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phoneNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number (Optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="+1 123-456-7890"
+                      {...field}
+                      value={field.value ?? ''}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

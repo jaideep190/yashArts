@@ -164,6 +164,7 @@ const profileDataSchema = z.object({
   description: z.string().min(1, 'Description is required.'),
   instagram: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
   email: z.string().email('Please enter a valid email address.'),
+  phoneNumber: z.string().optional().or(z.literal('')),
   profilePictureUrl: z.string().url().nullable(),
   profilePictureFileId: z.string().nullable(),
 });
@@ -175,6 +176,7 @@ const defaultProfileData: ProfileData = {
     description: 'An artist exploring the dance between light and shadow, capturing fleeting moments and emotions on canvas with a blend of classical techniques and modern expressionism.',
     instagram: 'https://www.instagram.com/yash_._100/',
     email: 't.yashraj.singh.710@gmail.com',
+    phoneNumber: '+91 12345 67890',
     profilePictureUrl: null,
     profilePictureFileId: null,
 };
