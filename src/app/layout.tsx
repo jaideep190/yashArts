@@ -5,17 +5,19 @@ import { AuthProvider } from '@/context/auth-context';
 import { ImageKitProvider } from '@/components/imagekit-provider';
 import ParticleBackground from '@/components/particle-background';
 
+const siteUrl = 'https://yasharts-portfolio.vercel.app';
+
 export const metadata: Metadata = {
   title: 'YashArts',
   description: 'An elegant portfolio for artists, showcasing a blend of classical techniques and modern expressionism.',
   openGraph: {
     title: 'YashArts',
     description: 'An elegant portfolio for artists, showcasing a blend of classical techniques and modern expressionism.',
-    url: 'https://yasharts-portfolio.vercel.app',
+    url: siteUrl,
     siteName: 'YashArts',
     images: [
       {
-        url: '/profile/preview.png',
+        url: `${siteUrl}/profile/preview.png`,
         width: 1200,
         height: 630,
         alt: 'A preview of the YashArts portfolio website.',
@@ -28,7 +30,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'YashArts',
     description: 'An elegant portfolio for artists, showcasing a blend of classical techniques and modern expressionism.',
-    images: ['/profile/preview.png'],
+    images: [`${siteUrl}/profile/preview.png`],
   },
 };
 
