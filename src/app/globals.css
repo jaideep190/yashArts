@@ -90,7 +90,8 @@
   * {
     @apply border-border;
   }
-  html {
+  body {
+    @apply text-foreground;
     animation: gradient-shift 25s ease infinite;
     background: linear-gradient(
       -45deg,
@@ -100,9 +101,6 @@
       hsl(var(--secondary))
     );
     background-size: 400% 400%;
-  }
-  body {
-    @apply text-foreground;
   }
 }
 

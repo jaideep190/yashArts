@@ -59,7 +59,7 @@ export default function RootLayout({
         <meta name="twitter:description" content="Blend of classical techniques and modern expressionism." />
         <meta name="twitter:image" content="https://ik.imagekit.io/jaideep190/uploads/preview.png" />
       </head>
-      <body className="font-body antialiased bg-transparent text-foreground">
+      <body className="font-body antialiased text-foreground">
         <AuthProvider>
           <ImageKitProvider>{children}</ImageKitProvider>
         </AuthProvider>
