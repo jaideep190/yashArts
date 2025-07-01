@@ -2,18 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@keyframes gradient-shift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
 @layer base {
   :root {
     --background: 0 0% 94%;
@@ -91,16 +79,7 @@
     @apply border-border;
   }
   body {
-    @apply text-foreground;
-    animation: gradient-shift 25s ease infinite;
-    background: linear-gradient(
-      -45deg,
-      hsl(var(--background)),
-      hsl(var(--secondary)),
-      hsla(var(--primary), 0.15),
-      hsl(var(--secondary))
-    );
-    background-size: 400% 400%;
+    @apply bg-background text-foreground;
   }
 }
 
