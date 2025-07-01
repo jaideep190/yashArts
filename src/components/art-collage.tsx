@@ -5,6 +5,7 @@ import { IKImage } from 'imagekitio-react';
 import { FileQuestion } from 'lucide-react';
 import ImageModal from './image-modal';
 import { useAuth } from '@/context/auth-context';
+import { cn } from '@/lib/utils';
 import {
   DndContext,
   closestCenter,
@@ -32,77 +33,81 @@ export type ImageType = {
   title?: string;
 };
 
-// New SortableImage component for admins
-function SortableImage({ image, onClick }: { image: ImageType; onClick: () => void; }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: image.fileId });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 99 : 'auto',
-  };
-  
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="group relative mb-4 break-inside-avoid overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl cursor-grab active:cursor-grabbing"
-      onClick={onClick}
-      role="button"
-      aria-label={`Drag to reorder, or click to view larger image for ${image.alt}`}
-    >
-      <IKImage
-        src={image.src}
-        alt={image.alt}
-        width={image.width}
-        height={image.height}
-        className="w-full h-auto transition-transform duration-300 ease-in-out group-hover:scale-105"
-        lqip={{ active: true }}
-        loading="lazy"
-      />
-    </div>
-  );
-}
-
-// Draggable Image for the DragOverlay
-function DraggableImagePreview({ image }: { image: ImageType }) {
-  return (
-    <div
-      className="rounded-xl shadow-2xl overflow-hidden cursor-grabbing"
-      style={{ width: '256px' }}
-    >
-      <IKImage
-        src={image.src}
-        alt={image.alt}
-        width={image.width}
-        height={image.height}
-        className="w-full h-auto"
-      />
-    </div>
-  );
-}
-
 interface ArtCollageProps {
   images: ImageType[];
   onDelete: (fileId: string) => void;
   onOrderChange: (images: ImageType[]) => void;
   onUpdate: (image: ImageType) => void;
+  isEditMode: boolean;
 }
 
-export default function ArtCollage({ images, onDelete, onOrderChange, onUpdate }: ArtCollageProps) {
+export default function ArtCollage({ images, onDelete, onOrderChange, onUpdate, isEditMode }: ArtCollageProps) {
   const [selectedImage, setSelectedImage] = React.useState<ImageType | null>(null);
   const [activeImage, setActiveImage] = React.useState<ImageType | null>(null);
   const { user } = useAuth();
+
+  // New SortableImage component for admins
+  function SortableImage({ image, onClick }: { image: ImageType; onClick: () => void; }) {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: image.fileId });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+      zIndex: isDragging ? 99 : 'auto',
+    };
+    
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        {...(isEditMode ? listeners : {})}
+        className={cn(
+          "group relative mb-4 break-inside-avoid overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl",
+          isEditMode ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
+        )}
+        onClick={onClick}
+        role="button"
+        aria-label={isEditMode ? `Drag to reorder, or click to view larger image for ${image.alt}` : `View larger image for ${image.alt}`}
+      >
+        <IKImage
+          src={image.src}
+          alt={image.alt}
+          width={image.width}
+          height={image.height}
+          className="w-full h-auto transition-transform duration-300 ease-in-out group-hover:scale-105"
+          lqip={{ active: true }}
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
+  // Draggable Image for the DragOverlay
+  function DraggableImagePreview({ image }: { image: ImageType }) {
+    return (
+      <div
+        className="rounded-xl shadow-2xl overflow-hidden cursor-grabbing"
+        style={{ width: '256px' }}
+      >
+        <IKImage
+          src={image.src}
+          alt={image.alt}
+          width={image.width}
+          height={image.height}
+          className="w-full h-auto"
+        />
+      </div>
+    );
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -110,10 +115,12 @@ export default function ArtCollage({ images, onDelete, onOrderChange, onUpdate }
         delay: 250,
         tolerance: 5,
       },
+      enabled: isEditMode,
     })
   );
 
   const openModal = (image: ImageType) => {
+    if (isEditMode) return;
     setSelectedImage(image);
   };
 

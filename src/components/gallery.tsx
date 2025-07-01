@@ -6,7 +6,7 @@ import ArtCollage from '@/components/art-collage';
 import type { ImageType } from '@/components/art-collage';
 import UploadDialog from '@/components/upload-dialog';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, LogIn, LogOut } from 'lucide-react';
+import { FilePlus2, LogIn, LogOut, Edit, Check } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { updateArtworkOrder } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +18,7 @@ interface GalleryProps {
 export default function Gallery({ initialImages }: GalleryProps) {
   const [images, setImages] = useState<ImageType[]>(initialImages);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const { user, logout } = useAuth();
   const { toast } = useToast();
 
@@ -61,11 +62,21 @@ export default function Gallery({ initialImages }: GalleryProps) {
         onDelete={handleDeleteComplete} 
         onOrderChange={handleOrderChange}
         onUpdate={handleUpdateComplete}
+        isEditMode={isEditMode}
       />
 
       <div className="fixed bottom-8 right-8 flex flex-col gap-4">
         {user ? (
           <>
+            <Button
+              onClick={() => setIsEditMode(prev => !prev)}
+              variant={isEditMode ? 'default' : 'secondary'}
+              className="h-14 w-14 rounded-full shadow-lg"
+              size="icon"
+              aria-label={isEditMode ? 'Finish editing order' : 'Edit order'}
+            >
+              {isEditMode ? <Check className="h-6 w-6" /> : <Edit className="h-6 w-6" />}
+            </Button>
             <Button
               onClick={() => setIsUploadDialogOpen(true)}
               className="h-14 w-14 rounded-full shadow-lg"
