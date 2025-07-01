@@ -15,7 +15,6 @@ const ParticleBackground = () => {
     const foregroundHsl = getComputedStyle(document.documentElement).getPropertyValue('--foreground').trim();
     
     let particles: Particle[] = [];
-    const particleCount = 50;
 
     class Particle {
       x: number;
@@ -28,10 +27,16 @@ const ParticleBackground = () => {
       constructor() {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
-        this.radius = Math.random() * 1.5 + 0.5;
+        
+        // Adjust particle size for mobile by checking canvas width directly
+        const isMobile = canvas.width < 768;
+        const maxRadius = isMobile ? 1.0 : 1.5;
+        const minRadius = isMobile ? 0.2 : 0.5;
+        this.radius = Math.random() * (maxRadius - minRadius) + minRadius;
+        
         this.vx = (Math.random() - 0.5) * 0.3;
         this.vy = (Math.random() - 0.5) * 0.3;
-        this.color = `hsla(${foregroundHsl}, ${Math.random() * 0.1 + 0.05})`;
+        this.color = `hsla(${foregroundHsl}, ${Math.random() * 0.05 + 0.05})`;
       }
 
       update() {
@@ -56,6 +61,10 @@ const ParticleBackground = () => {
     }
 
     function init() {
+      // Reduce particle count on mobile
+      const isMobile = canvas.width < 768;
+      const particleCount = isMobile ? 35 : 50;
+
       particles = [];
       for (let i = 0; i < particleCount; i++) {
         particles.push(new Particle());
