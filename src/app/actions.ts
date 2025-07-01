@@ -139,6 +139,24 @@ export async function updateArtworkOrder(artworks: ImageType[]) {
   }
 }
 
+export async function updateArtworkTitle(fileId: string, newTitle: string) {
+  if (!fileId || !newTitle || !newTitle.trim()) {
+    return { success: false, error: 'Invalid file ID or title.' };
+  }
+  
+  try {
+    const artworkRef = doc(artworksCollection, fileId);
+    const trimmedTitle = newTitle.trim();
+    await updateDoc(artworkRef, { title: trimmedTitle, alt: trimmedTitle });
+    
+    revalidatePath('/');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to update artwork title:', error);
+    return { success: false, error: 'An unexpected server error occurred.' };
+  }
+}
+
 
 // Profile Data Management
 const profileDataSchema = z.object({

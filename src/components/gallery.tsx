@@ -29,6 +29,14 @@ export default function Gallery({ initialImages }: GalleryProps) {
     setImages(prevImages => prevImages.filter(image => image.fileId !== fileId));
   };
 
+  const handleUpdateComplete = (updatedImage: ImageType) => {
+    setImages(prevImages =>
+      prevImages.map(image =>
+        image.fileId === updatedImage.fileId ? updatedImage : image
+      )
+    );
+  };
+
   const handleOrderChange = async (newImages: ImageType[]) => {
     // Optimistically update the UI
     setImages(newImages);
@@ -52,6 +60,7 @@ export default function Gallery({ initialImages }: GalleryProps) {
         images={images} 
         onDelete={handleDeleteComplete} 
         onOrderChange={handleOrderChange}
+        onUpdate={handleUpdateComplete}
       />
 
       <div className="fixed bottom-8 right-8 flex flex-col gap-4">

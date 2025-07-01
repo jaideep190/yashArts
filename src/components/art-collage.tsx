@@ -96,9 +96,10 @@ interface ArtCollageProps {
   images: ImageType[];
   onDelete: (fileId: string) => void;
   onOrderChange: (images: ImageType[]) => void;
+  onUpdate: (image: ImageType) => void;
 }
 
-export default function ArtCollage({ images, onDelete, onOrderChange }: ArtCollageProps) {
+export default function ArtCollage({ images, onDelete, onOrderChange, onUpdate }: ArtCollageProps) {
   const [selectedImage, setSelectedImage] = React.useState<ImageType | null>(null);
   const [activeImage, setActiveImage] = React.useState<ImageType | null>(null);
   const { user } = useAuth();
@@ -118,6 +119,11 @@ export default function ArtCollage({ images, onDelete, onOrderChange }: ArtColla
 
   const closeModal = () => {
     setSelectedImage(null);
+  };
+
+  const handleUpdateAndClose = (updatedImage: ImageType) => {
+    onUpdate(updatedImage);
+    setSelectedImage(updatedImage);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -179,13 +185,19 @@ export default function ArtCollage({ images, onDelete, onOrderChange }: ArtColla
     </>
   );
 
+  const commonModalProps = {
+    onClose: closeModal,
+    onDelete: onDelete,
+    onUpdate: handleUpdateAndClose,
+  };
+
   if (!user) {
     return (
       <>
         <div className="container mx-auto px-4 py-8">
           {galleryContent}
         </div>
-        {selectedImage && <ImageModal image={selectedImage} onClose={closeModal} onDelete={onDelete} />}
+        {selectedImage && <ImageModal image={selectedImage} {...commonModalProps} />}
       </>
     );
   }
@@ -208,7 +220,7 @@ export default function ArtCollage({ images, onDelete, onOrderChange }: ArtColla
             {activeImage ? <DraggableImagePreview image={activeImage} /> : null}
         </DragOverlay>
       </DndContext>
-      {selectedImage && <ImageModal image={selectedImage} onClose={closeModal} onDelete={onDelete} />}
+      {selectedImage && <ImageModal image={selectedImage} {...commonModalProps} />}
     </>
   );
 }
