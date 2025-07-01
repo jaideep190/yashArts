@@ -8,7 +8,7 @@ export default async function Home() {
   const profilePictureSrc = profileData.profilePictureUrl || 'https://placehold.co/128x128.png';
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-transparent text-foreground">
+    <div className="flex min-h-screen w-full flex-col text-foreground">
       <EditableHeader 
         initialProfilePictureSrc={profilePictureSrc}
         initialProfileData={profileData}
