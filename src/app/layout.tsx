@@ -6,6 +6,7 @@ import { ImageKitProvider } from '@/components/imagekit-provider';
 import ParticleBackground from '@/components/particle-background';
 
 const siteUrl = 'https://yasharts-portfolio.vercel.app';
+const previewImageUrl = 'https://drive.google.com/drive-viewer/AKGpihZbOfpK05qqMm_L3gpS022olz-vNN95WsfTXJBpVOoCCqPDOoqoj3acuAVG2lxBj8v_hx2X1G4ki4XD_WWD2CV-3D5PRw4cOg=w1910-h885-rw-v1';
 
 export const metadata: Metadata = {
   title: 'YashArts',
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
     siteName: 'YashArts',
     images: [
       {
-        url: `${siteUrl}/profile/preview.png`,
+        url: previewImageUrl,
         width: 1200,
         height: 630,
         alt: 'A preview of the YashArts portfolio website.',
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'YashArts',
     description: 'An elegant portfolio for artists, showcasing a blend of classical techniques and modern expressionism.',
-    images: [`${siteUrl}/profile/preview.png`],
+    images: [previewImageUrl],
   },
 };
 
