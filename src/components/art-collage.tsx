@@ -157,7 +157,7 @@ export default function ArtCollage({ images, onDelete, onOrderChange, onUpdate, 
   const galleryContent = (
     <>
       {images.length > 0 ? (
-        <div className="columns-3 gap-4 lg:columns-4">
+        <div className="columns-2 md:columns-3 lg:columns-4 gap-4">
           {images.map((image) => (
              user ? (
               <SortableImage key={image.fileId} image={image} onClick={() => openModal(image)} />
