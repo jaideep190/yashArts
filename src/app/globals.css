@@ -81,6 +81,26 @@
   body {
     @apply text-foreground;
   }
+
+  /* Interactive light source background */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(
+      circle 400px at var(--mouse-x, -1000px) var(--mouse-y, -1000px),
+      hsla(var(--primary), 0.1),
+      transparent 80%
+    );
+    opacity: 0;
+    transition: opacity 0.4s ease-out;
+  }
+
+  body:hover::after {
+    opacity: 1;
+  }
 }
 
 /* Custom Scrollbar */

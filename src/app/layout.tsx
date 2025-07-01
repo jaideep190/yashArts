@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/context/auth-context';
 import { ImageKitProvider } from '@/components/imagekit-provider';
-import ParticleBackground from '@/components/particle-background';
+import InteractiveLightBackground from '@/components/particle-background';
 
 const siteUrl = 'https://yasharts-portfolio.vercel.app';
 const previewImageUrl = 'https://ik.imagekit.io/jaideep190/uploads/preview.png';
@@ -61,7 +61,7 @@ export default function RootLayout({
         <meta name="twitter:image" content="https://ik.imagekit.io/jaideep190/uploads/preview.png" />
       </head>
       <body className="font-body antialiased bg-background text-foreground">
-        <ParticleBackground />
+        <InteractiveLightBackground />
         <AuthProvider>
           <ImageKitProvider>{children}</ImageKitProvider>
         </AuthProvider>
