@@ -71,7 +71,7 @@ export default function ArtCollage({ images, onDelete, onOrderChange, onUpdate, 
         {...attributes}
         {...(isEditMode ? listeners : {})}
         className={cn(
-          "group relative mb-4 break-inside-avoid overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl transform-gpu",
+          "group relative mb-4 break-inside-avoid overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl will-change-transform",
           isEditMode ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
         )}
         onClick={onClick}
@@ -164,7 +164,7 @@ export default function ArtCollage({ images, onDelete, onOrderChange, onUpdate, 
             ) : (
               <div
                 key={image.fileId}
-                className="group relative mb-4 break-inside-avoid overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl cursor-pointer transform-gpu"
+                className="group relative mb-4 break-inside-avoid overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl cursor-pointer will-change-transform"
                 onClick={() => openModal(image)}
                 role="button"
                 aria-label={`View larger image for ${image.alt}`}
