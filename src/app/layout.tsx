@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     siteName: 'YashArts',
     images: [
       {
-        url: 'https://placehold.co/1200x630.png',
+        url: '/profile/preview.png',
         width: 1200,
         height: 630,
         alt: 'A preview of the YashArts portfolio website.',
@@ -28,9 +28,10 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'YashArts',
     description: 'An elegant portfolio for artists, showcasing a blend of classical techniques and modern expressionism.',
-    images: ['https://placehold.co/1200x630.png'],
+    images: ['/profile/preview.png'],
   },
 };
+
 
 export default function RootLayout({
   children,
