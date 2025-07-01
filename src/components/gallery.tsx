@@ -110,7 +110,7 @@ export default function Gallery({ initialImages }: GalleryProps) {
                 <div
                   key={image.fileId}
                   onClick={() => openModal(image)}
-                  className="group relative cursor-pointer overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl will-change-transform"
+                  className="group relative aspect-square cursor-pointer overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl will-change-transform"
                   role="button"
                   aria-label={image.alt}
                 >
@@ -119,7 +119,7 @@ export default function Gallery({ initialImages }: GalleryProps) {
                     alt={image.alt}
                     width={image.width}
                     height={image.height}
-                    className="h-auto w-full transition-transform duration-300 ease-in-out group-hover:scale-105"
+                    className="h-full w-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
                     lqip={{ active: true }}
                     loading="lazy"
                   />
