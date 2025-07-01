@@ -51,13 +51,13 @@ export default function RootLayout({
         />
         {/* OG & Twitter meta tags */}
         <meta property="og:title" content="YashArts" />
-        <meta property="og:description" content="An elegant portfolio for artists, showcasing a blend of classical techniques and modern expressionism." />
+        <meta property="og:description" content="Blend of classical techniques and modern expressionism." />
         <meta property="og:image" content="https://ik.imagekit.io/jaideep190/uploads/preview.png" />
         <meta property="og:url" content="https://yasharts-portfolio.vercel.app" />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="YashArts" />
-        <meta name="twitter:description" content="An elegant portfolio for artists, showcasing a blend of classical techniques and modern expressionism." />
+        <meta name="twitter:description" content="Blend of classical techniques and modern expressionism." />
         <meta name="twitter:image" content="https://ik.imagekit.io/jaideep190/uploads/preview.png" />
       </head>
       <body className="font-body antialiased bg-background text-foreground">
