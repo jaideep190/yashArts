@@ -10,10 +10,10 @@ const previewImageUrl = 'https://ik.imagekit.io/jaideep190/uploads/preview.png';
 
 export const metadata: Metadata = {
   title: 'YashArts',
-  description: 'An elegant portfolio for artists, showcasing a blend of classical techniques and modern expressionism.',
+  description: 'Blend of classical techniques and modern expressionism.',
   openGraph: {
     title: 'YashArts',
-    description: 'An elegant portfolio for artists, showcasing a blend of classical techniques and modern expressionism.',
+    description: 'Blend of classical techniques and modern expressionism.',
     url: siteUrl,
     siteName: 'YashArts',
     images: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'YashArts',
-    description: 'An elegant portfolio for artists, showcasing a blend of classical techniques and modern expressionism.',
+    description: 'Blend of classical techniques and modern expressionism.',
     images: [previewImageUrl],
   },
 };
