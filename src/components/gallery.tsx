@@ -11,8 +11,6 @@ import { useAuth } from '@/context/auth-context';
 import { updateArtworkOrder } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import ImageModal from '@/components/image-modal';
-import { Separator } from '@/components/ui/separator';
-import { IKImage } from 'imagekitio-react';
 
 interface GalleryProps {
   initialImages: ImageType[];
@@ -25,9 +23,6 @@ export default function Gallery({ initialImages }: GalleryProps) {
   const [selectedImage, setSelectedImage] = useState<ImageType | null>(null);
   const { user, logout } = useAuth();
   const { toast } = useToast();
-
-  const pinnedImages = images.filter(image => image.pinned);
-  const regularImages = images.filter(image => !image.pinned);
 
   const handleUploadComplete = (newImage: ImageType) => {
     setImages(prevImages => [newImage, ...prevImages]);
@@ -63,9 +58,12 @@ export default function Gallery({ initialImages }: GalleryProps) {
     }
   };
 
+  // onOrderChange receives only the reordered *unpinned* images
   const handleOrderChange = async (newRegularImages: ImageType[]) => {
     const originalImagesState = images;
-    // Optimistically update the UI
+    const pinnedImages = originalImagesState.filter(img => img.pinned);
+    
+    // Optimistically update the UI by combining pinned and newly sorted regular images
     const updatedFullList = [...pinnedImages, ...newRegularImages];
     setImages(updatedFullList);
 
@@ -83,6 +81,7 @@ export default function Gallery({ initialImages }: GalleryProps) {
   };
   
   const openModal = (image: ImageType) => {
+    // In edit mode, clicking a sortable (unpinned) item does not open the modal
     if (isEditMode && !image.pinned) return;
     setSelectedImage(image);
   };
@@ -94,36 +93,8 @@ export default function Gallery({ initialImages }: GalleryProps) {
   return (
     <>
       <div className="container mx-auto px-4 py-8">
-        {pinnedImages.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-2xl font-headline tracking-wider mb-6">Pinned Artwork</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {pinnedImages.map((image) => (
-                <div
-                  key={image.fileId}
-                  className="group relative break-inside-avoid overflow-hidden rounded-xl shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl cursor-pointer will-change-transform"
-                  onClick={() => openModal(image)}
-                  role="button"
-                  aria-label={`View larger image for ${image.alt}`}
-                >
-                  <IKImage
-                    src={image.src}
-                    alt={image.alt}
-                    width={image.width}
-                    height={image.height}
-                    className="w-full h-auto object-cover aspect-square transition-transform duration-300 ease-in-out group-hover:scale-105"
-                    lqip={{ active: true }}
-                    loading="lazy"
-                  />
-                </div>
-              ))}
-            </div>
-            <Separator className="mt-12" />
-          </div>
-        )}
-        
         <ArtCollage 
-          images={regularImages} 
+          images={images} 
           onOrderChange={handleOrderChange}
           isEditMode={isEditMode}
           onImageClick={openModal}
