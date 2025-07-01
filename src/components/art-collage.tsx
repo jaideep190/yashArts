@@ -31,6 +31,8 @@ export type ImageType = {
   height: number;
   aiHint?: string;
   title?: string;
+  order?: number;
+  pinned?: boolean;
 };
 
 interface ArtCollageProps {

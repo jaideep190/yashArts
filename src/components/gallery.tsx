@@ -31,11 +31,23 @@ export default function Gallery({ initialImages }: GalleryProps) {
   };
 
   const handleUpdateComplete = (updatedImage: ImageType) => {
-    setImages(prevImages =>
-      prevImages.map(image =>
+    setImages(prevImages => {
+      const newImages = prevImages.map(image =>
         image.fileId === updatedImage.fileId ? updatedImage : image
-      )
-    );
+      );
+      
+      // Re-sort the array: pinned items first, then by order.
+      newImages.sort((a, b) => {
+        const aIsPinned = a.pinned ?? false;
+        const bIsPinned = b.pinned ?? false;
+        if (aIsPinned !== bIsPinned) {
+          return aIsPinned ? -1 : 1;
+        }
+        return (b.order ?? 0) - (a.order ?? 0);
+      });
+      
+      return newImages;
+    });
   };
 
   const handleOrderChange = async (newImages: ImageType[]) => {

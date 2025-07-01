@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { IKImage } from 'imagekitio-react';
-import { X, Trash2, Loader2, Pencil, Check } from 'lucide-react';
+import { X, Trash2, Loader2, Pencil, Check, Pin } from 'lucide-react';
 import type { ImageType } from './art-collage';
 import { useAuth } from '@/context/auth-context';
 import {
@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { deleteArtwork, updateArtworkTitle } from '@/app/actions';
+import { deleteArtwork, updateArtworkTitle, updateArtworkPinnedStatus } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,7 @@ export default function ImageModal({ image, onClose, onDelete, onUpdate }: Image
   const [isEditingTitle, setIsEditingTitle] = React.useState(false);
   const [newTitle, setNewTitle] = React.useState(image?.title || '');
   const [isSavingTitle, setIsSavingTitle] = React.useState(false);
+  const [isPinning, setIsPinning] = React.useState(false);
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -107,6 +108,26 @@ export default function ImageModal({ image, onClose, onDelete, onUpdate }: Image
     }
     setIsSavingTitle(false);
   };
+  
+  const handlePinToggle = async () => {
+    if (!user) return;
+    setIsPinning(true);
+    try {
+      const newPinnedStatus = !image.pinned;
+      const result = await updateArtworkPinnedStatus(image.fileId, newPinnedStatus);
+
+      if (result.success) {
+        toast({ title: 'Success', description: `Artwork has been ${newPinnedStatus ? 'pinned' : 'unpinned'}.` });
+        onUpdate({ ...image, pinned: newPinnedStatus });
+      } else {
+        toast({ title: 'Pin Failed', description: result.error, variant: 'destructive' });
+      }
+    } catch (error) {
+      toast({ title: 'Error', description: 'An unexpected error occurred.', variant: 'destructive' });
+    } finally {
+      setIsPinning(false);
+    }
+  };
 
   return (
     <>
@@ -165,14 +186,29 @@ export default function ImageModal({ image, onClose, onDelete, onUpdate }: Image
         </div>
         
         {user && (
-          <button
-            onClick={() => setIsAlertOpen(true)}
-            disabled={isDeleting}
-            className="absolute top-4 right-16 text-white bg-black/50 rounded-full p-2 hover:bg-destructive transition-colors focus:outline-none focus:ring-2 focus:ring-white disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Delete image"
-          >
-            <Trash2 className="h-6 w-6" />
-          </button>
+          <>
+            <button
+              onClick={handlePinToggle}
+              disabled={isPinning || isDeleting}
+              className="absolute top-4 right-28 text-white bg-black/50 rounded-full p-2 hover:bg-white/20 transition-colors focus:outline-none focus:ring-2 focus:ring-white disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={image.pinned ? 'Unpin image' : 'Pin image'}
+              title={image.pinned ? 'Unpin image' : 'Pin image'}
+            >
+              {isPinning ? (
+                  <Loader2 className="h-6 w-6 animate-spin" />
+              ) : (
+                  <Pin className="h-6 w-6" fill={image.pinned ? 'currentColor' : 'none'} />
+              )}
+            </button>
+            <button
+              onClick={() => setIsAlertOpen(true)}
+              disabled={isDeleting}
+              className="absolute top-4 right-16 text-white bg-black/50 rounded-full p-2 hover:bg-destructive transition-colors focus:outline-none focus:ring-2 focus:ring-white disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Delete image"
+            >
+              <Trash2 className="h-6 w-6" />
+            </button>
+          </>
         )}
 
         <button

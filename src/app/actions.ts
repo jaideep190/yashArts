@@ -13,6 +13,7 @@ import {
   writeBatch,
   getDoc,
   updateDoc,
+  where,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { ImageType } from '@/components/art-collage';
@@ -28,6 +29,17 @@ export async function getArtworks(): Promise<ImageType[]> {
     const q = query(artworksCollection, orderBy('order', 'desc'));
     const artworksSnapshot = await getDocs(q);
     const artworksList = artworksSnapshot.docs.map(doc => doc.data() as ImageType);
+    
+    // Sort with pinned items first, then by order
+    artworksList.sort((a, b) => {
+      const aIsPinned = a.pinned ?? false;
+      const bIsPinned = b.pinned ?? false;
+      if (aIsPinned !== bIsPinned) {
+        return aIsPinned ? -1 : 1;
+      }
+      return (b.order ?? 0) - (a.order ?? 0);
+    });
+    
     return artworksList;
   } catch (error) {
     console.error("Failed to get artworks:", error);
@@ -60,7 +72,7 @@ export async function uploadArtwork(formData: FormData) {
 
     const artworkRef = doc(artworksCollection, uploadResponse.fileId);
 
-    const newArtwork: ImageType & { order: number } = {
+    const newArtwork: ImageType = {
         src: uploadResponse.url,
         fileId: uploadResponse.fileId,
         width: uploadResponse.width ?? 500,
@@ -69,18 +81,16 @@ export async function uploadArtwork(formData: FormData) {
         title: title,
         aiHint: 'uploaded art',
         order: Date.now(),
+        pinned: false,
     };
     
     await setDoc(artworkRef, newArtwork);
 
     revalidatePath('/');
 
-    // Return only ImageType fields
-    const { order, ...returnedArtwork } = newArtwork;
-
     return { 
       success: true, 
-      artwork: returnedArtwork,
+      artwork: newArtwork,
     };
   } catch (error: any) {
     console.error('Upload failed:', error);
@@ -153,6 +163,33 @@ export async function updateArtworkTitle(fileId: string, newTitle: string) {
     return { success: true };
   } catch (error: any) {
     console.error('Failed to update artwork title:', error);
+    return { success: false, error: 'An unexpected server error occurred.' };
+  }
+}
+
+export async function updateArtworkPinnedStatus(fileId: string, pinned: boolean) {
+  if (!fileId) {
+    return { success: false, error: 'Invalid file ID.' };
+  }
+
+  try {
+    const artworkRef = doc(artworksCollection, fileId);
+
+    if (pinned) {
+      // If we are trying to pin, check the count of already pinned items.
+      const q = query(artworksCollection, where('pinned', '==', true));
+      const pinnedSnapshot = await getDocs(q);
+      if (pinnedSnapshot.size >= 4) {
+        return { success: false, error: 'You can only pin a maximum of 4 artworks.' };
+      }
+    }
+    
+    await updateDoc(artworkRef, { pinned: pinned });
+    
+    revalidatePath('/');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to update artwork pin status:', error);
     return { success: false, error: 'An unexpected server error occurred.' };
   }
 }
